@@ -8,33 +8,147 @@ double InvariantMass(TLorentzVector *Vector1, TLorentzVector *Vector2) {
 	return inv_mass;
 }
 
-void MC_Analysis::print_variable() {
-	cout << "elec_0_pt from func def: " << elec_0_p4->Pt() << endl;
-}
 
 // Works out what type of event is occuring
 string MC_Analysis::event_type() {
 	string event_type;
-	if (elec_0 > 0) {
+	if (elec_0 > 0 && muon_0 == 0 && tau_0 == 0) {
 		event_type = "Electron";
 	}
-	if (muon_0 > 0) {
+	if (elec_0 == 0 && muon_0 > 0 && tau_0 == 0) {
 		event_type = "Muon";
 	}
-	if (tau_0 > 0) {
+	if (elec_0 == 0 && muon_0 == 0 && tau_0 > 0) {
 		event_type = "Tau";
+	}
+	if (elec_0 == 0 && muon_0 > 0 && tau_0 > 0) {
+		event_type = "MuonTau";
+	}
+	if (elec_0 > 0 && muon_0 == 0 && tau_0 > 0) {
+		event_type = "ElectronTau";
+	}
+	if (elec_0 > 0 && muon_0 > 0 && tau_0 == 0) {
+		event_type = "ElectronMuon";
 	}
 	return event_type;
 }
 
-/*void MC_Analysis::particle_selection() {
+void MC_Analysis::ParticleSelection() {
 	
 	if (event_type() == "Electron") {
-		lep_0 = elec_0; // MAY BE =& HERE 
+		lep_0 = & elec_0;
 		lep_0_p4 = elec_0_p4;
-		lep_0_q = elec_0_q; // AND HERE 
+		lep_0_q = & elec_0_q;
+
+		lep_1 = & elec_1;
+		lep_1_p4 = elec_1_p4;
+		lep_1_q = & elec_1_q;
+
+		n_leptons = n_electrons; 
 	}
-}*/
+		
+	if (event_type() == "Muon") {
+		lep_0 = & muon_0;
+		lep_0_p4 = muon_0_p4;
+		lep_0_q = & muon_0_q;
+
+		lep_1 = & muon_1;
+		lep_1_p4 = muon_1_p4;
+		lep_1_q = & muon_1_q;
+
+		n_leptons = n_muons; 
+	}
+
+	if (event_type() == "Tau") {
+		lep_0 = & tau_0;
+		lep_0_p4 = tau_0_p4;
+		lep_0_q = & tau_0_q;
+
+		lep_1 = & tau_1;
+		lep_1_p4 = tau_1_p4;
+		lep_1_q = & tau_1_q;
+
+		n_leptons = n_taus; 
+	}
+	
+	if (event_type() == "ElectronMuon") {
+		if (elec_0_p4->Pt() > muon_0_p4->Pt()){
+			lep_0 = & elec_0;
+			lep_0_p4 = elec_0_p4;
+			lep_0_q = & elec_0_q;
+
+			lep_1 = & muon_1;
+			lep_1_p4 = muon_1_p4;
+			lep_1_q = & muon_1_q;
+		} else {
+			lep_0 = & muon_0;
+			lep_0_p4 = muon_0_p4;
+			lep_0_q = & muon_0_q;
+
+			lep_1 = & elec_1;
+			lep_1_p4 = elec_1_p4;
+			lep_1_q = & elec_1_q;
+		}
+
+		if (n_muons == 1 && n_electrons == 1) {
+			n_leptons = n_muons + n_electrons;	
+		 } else {
+			n_leptons = 0;
+		}			
+	}
+
+	if (event_type() == "ElectronTau") {
+		if (elec_0_p4->Pt() > tau_0_p4->Pt()){
+			lep_0 = & elec_0;
+			lep_0_p4 = elec_0_p4;
+			lep_0_q = & elec_0_q;
+
+			lep_1 = & tau_1;
+			lep_1_p4 = tau_1_p4;
+			lep_1_q = & tau_1_q;
+		} else {
+			lep_0 = & tau_0;
+			lep_0_p4 = tau_0_p4;
+			lep_0_q = & tau_0_q;
+
+			lep_1 = & elec_1;
+			lep_1_p4 = elec_1_p4;
+			lep_1_q = & elec_1_q;
+		} 
+
+		if (n_taus == 1 && n_electrons == 1) {
+			n_leptons = n_taus + n_electrons;
+		} else {
+			n_leptons = 0;
+		}			
+	}
+
+	if (event_type() == "MuonTau") {
+		if (muon_0_p4->Pt() > tau_0_p4->Pt()){
+			lep_0 = & muon_0;
+			lep_0_p4 = muon_0_p4;
+			lep_0_q = & muon_0_q;
+
+			lep_1 = & tau_1;
+			lep_1_p4 = tau_1_p4;
+			lep_1_q = & tau_1_q;
+		} else {
+			lep_0 = & tau_0;
+			lep_0_p4 = tau_0_p4;
+			lep_0_q = & tau_0_q;
+
+			lep_1 = & muon_1;
+			lep_1_p4 = muon_1_p4;
+			lep_1_q = & muon_1_q;
+		} 
+
+		if (n_taus == 1 && n_muons == 1) {
+			n_leptons = n_taus + n_muons;
+		} else { 
+			n_leptons = 0;
+		}			
+	}
+}
 
 // Checks an event is a lepton-antilepton pair
 bool MC_Analysis::event_pair_truth() {

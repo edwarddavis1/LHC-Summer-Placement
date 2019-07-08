@@ -48,28 +48,11 @@ void MC_Analysis::Loop()
 			last_prog = prog_int;
 		}
 
-		double elec_0_pt = elec_0_p4->Pt();
-		double elec_1_pt = elec_1_p4->Pt();
-		double muon_0_pt = muon_0_p4->Pt();
-		double muon_1_pt = muon_1_p4->Pt();
-		double tau_0_pt = tau_0_p4->Pt();
-		double tau_1_pt = tau_1_p4->Pt();
+		// Selects the lepton in the event and loads the data in to the lep_ variables
+		ParticleSelection();
 
-		// Event identification
-		string lep_type;
-		if (elec_0 > 0) {
-			lep_type = "Electron";
-			h_lep_type->Fill("Electron", elec_0);
-		}
-		else if (muon_0 > 0) {
-			lep_type = "Muon";
-			h_lep_type->Fill("Muon", muon_0);
-		}
-		else if (tau_0 > 0) {
-			lep_type = "Tau";
-			h_lep_type->Fill("Tau", tau_0);
-		}
-
+		double lep_0_pt = lep_0_p4->Pt();
+		double lep_1_pt = lep_1_p4->Pt();
 
 		// Apply selection cuts & fill
 		bool event_pair = event_pair_truth();		// True if event has lepton-antilepton pair		
@@ -77,16 +60,21 @@ void MC_Analysis::Loop()
 
 		if (event_pair == true) {
 			if (passed_cuts == true){	
-				double elec_inv_mass = InvariantMass(elec_0_p4, elec_1_p4);
-				double muon_inv_mass = InvariantMass(muon_0_p4, muon_1_p4);
-				double tau_inv_mass = InvariantMass(tau_0_p4, tau_1_p4);
-				h_elec_inv_mass->Fill(elec_inv_mass);	
-				h_muon_inv_mass->Fill(muon_inv_mass);
-				h_tau_inv_mass->Fill(tau_inv_mass);
-
-				h_elec_pt->Fill(elec_0_pt);
-				h_muon_pt->Fill(muon_0_pt);	
-				h_tau_pt->Fill(tau_0_pt);
+				double dilep_inv_mass = InvariantMass(lep_0_p4, lep_1_p4);
+				/*if (event_type() == "Electron") {
+					h_elec_inv_mass->Fill(dilep_inv_mass);	
+					h_elec_pt->Fill(lep_0_pt);
+				}
+				if (event_type() == "Muon") {
+					h_muon_inv_mass->Fill(dilep_inv_mass);
+					h_muon_pt->Fill(lep_0_pt);
+				}
+				if (event_type() == "Tau") {
+					h_tau_inv_mass->Fill(dilep_inv_mass);
+					h_tau_pt->Fill(lep_0_pt);
+				}	
+				*/
+				h_muon_inv_mass->Fill(dilep_inv_mass);
 
 				h_elec_iso_etcone20->Fill(elec_0_iso_etcone20);
 				h_muon_iso_etcone20->Fill(muon_0_iso_etcone20);
@@ -99,16 +87,21 @@ void MC_Analysis::Loop()
 
 			}
 			else {
-				double elec_inv_mass_FC = InvariantMass(elec_0_p4, elec_1_p4);
-				double muon_inv_mass_FC = InvariantMass(muon_0_p4, muon_1_p4);
-				double tau_inv_mass_FC = InvariantMass(tau_0_p4, tau_1_p4);
-				h_elec_inv_mass_FC->Fill(elec_inv_mass_FC);	
-				h_muon_inv_mass_FC->Fill(muon_inv_mass_FC);
-				h_tau_inv_mass_FC->Fill(tau_inv_mass_FC);
-
-				h_elec_pt_FC->Fill(elec_0_pt);
-				h_muon_pt_FC->Fill(muon_0_pt);	
-				h_tau_pt_FC->Fill(tau_0_pt);
+				double dilep_inv_mass_FC = InvariantMass(lep_0_p4, lep_1_p4);
+				/*if (event_type() == "Electron") {
+					h_elec_inv_mass_FC->Fill(dilep_inv_mass_FC);	
+					h_elec_pt_FC->Fill(lep_0_pt);
+				}
+				if (event_type() == "Muon") {
+					h_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
+					h_muon_pt_FC->Fill(lep_0_pt);
+				}
+				if (event_type() == "Tau") {
+					h_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
+					h_tau_pt_FC->Fill(lep_0_pt);
+				}
+				*/				
+				h_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
 
 				h_elec_iso_etcone20_FC->Fill(elec_0_iso_etcone20);
 				h_muon_iso_etcone20_FC->Fill(muon_0_iso_etcone20);
@@ -136,6 +129,9 @@ void MC_Analysis::Loop()
 		h_bjet_0_pt->Fill(bjet_0_p4->Pt());
 		h_bjet_0_eta->Fill(bjet_0_p4->Eta());
 		h_bjet_0_phi->Fill(bjet_0_p4->Phi());
+
+			
+		//cout << "muon_0_pt: " << muon_0_p4->Pt() << "	lep_0_pt: " << lep_0_p4->Pt() << endl;
 
 	}
 	
