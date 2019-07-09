@@ -50,7 +50,8 @@ void MC_Analysis::Loop()
 
 		// Selects the lepton in the event and loads the data in to the lep_ variables
 		ParticleSelection();
-
+		event_type();
+		
 		double lep_0_pt = lep_0_p4->Pt();
 		double lep_1_pt = lep_1_p4->Pt();
 
@@ -59,66 +60,49 @@ void MC_Analysis::Loop()
 		bool passed_cuts = initial_cuts_truth();	// True if selection cuts are passed
 
 		if (event_pair == true) {
-			if (passed_cuts == true){	
-				double dilep_inv_mass = InvariantMass(lep_0_p4, lep_1_p4);
-				/*if (event_type() == "Electron") {
-					h_elec_inv_mass->Fill(dilep_inv_mass);	
-					h_elec_pt->Fill(lep_0_pt);
-				}
-				if (event_type() == "Muon") {
-					h_muon_inv_mass->Fill(dilep_inv_mass);
-					h_muon_pt->Fill(lep_0_pt);
-				}
-				if (event_type() == "Tau") {
-					h_tau_inv_mass->Fill(dilep_inv_mass);
-					h_tau_pt->Fill(lep_0_pt);
-				}	
-				*/
-				h_muon_inv_mass->Fill(dilep_inv_mass);
-
+			iinv_mass_elecf (passed_cuts == true){	
+				double dilep_inv_mass = InvariantMass(lep_0_p4, lep_1_p4);			
+				if (lep_type == "Electron") h_elec_inv_mass->Fill(dilep_inv_mass);
+				if (lep_type == "Muon") h_muon_inv_mass->Fill(dilep_inv_mass);
+				if (lep_type == "Tau") h_tau_inv_mass->Fill(dilep_inv_mass);
+				if (lep_type == "ElectronMuon") h_elec_muon_inv_mass->Fill(dilep_inv_mass);
+				if (lep_type == "MuonTau") h_muon_tau_inv_mass->Fill(dilep_inv_mass);
+				if (lep_type == "ElectronTau") h_elec_tau_inv_mass->Fill(dilep_inv_mass);
+				/*
 				h_elec_iso_etcone20->Fill(elec_0_iso_etcone20);
 				h_muon_iso_etcone20->Fill(muon_0_iso_etcone20);
 
 				h_elec_iso_ptcone30->Fill(elec_0_iso_ptcone30);
 				h_muon_iso_ptcone30->Fill(muon_0_iso_ptcone30);
-
+				*/
 				h_ljet_inv_mass->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
 				h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
 
 			}
 			else {
-				double dilep_inv_mass_FC = InvariantMass(lep_0_p4, lep_1_p4);
-				/*if (event_type() == "Electron") {
-					h_elec_inv_mass_FC->Fill(dilep_inv_mass_FC);	
-					h_elec_pt_FC->Fill(lep_0_pt);
-				}
-				if (event_type() == "Muon") {
-					h_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
-					h_muon_pt_FC->Fill(lep_0_pt);
-				}
-				if (event_type() == "Tau") {
-					h_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
-					h_tau_pt_FC->Fill(lep_0_pt);
-				}
-				*/				
-				h_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
-
+				double dilep_inv_mass_FC = InvariantMass(lep_0_p4, lep_1_p4);							
+				if (lep_type == "Electron") h_elec_inv_mass_FC->Fill(dilep_inv_mass_FC);
+				if (lep_type == "Muon") h_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
+				if (lep_type == "Tau") h_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
+				if (lep_type == "ElectronMuon") h_elec_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
+				if (lep_type == "MuonTau") h_muon_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
+				if (lep_type == "ElectronTau") h_elec_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
+/*
 				h_elec_iso_etcone20_FC->Fill(elec_0_iso_etcone20);
 				h_muon_iso_etcone20_FC->Fill(muon_0_iso_etcone20);
 
 				h_elec_iso_ptcone30_FC->Fill(elec_0_iso_ptcone30);
 				h_muon_iso_ptcone30_FC->Fill(muon_0_iso_ptcone30);
-
+*/
 				h_ljet_inv_mass_FC->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
 				h_bjet_inv_mass_FC->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
 
 			}
 		}
-		
-		// Number of leptons
 		int lep_n;
 		h_lep_n->Fill(lep_n);
-
+	
+		
 		// Jets
 		h_n_jets->Fill(n_jets);
 		
@@ -130,13 +114,11 @@ void MC_Analysis::Loop()
 		h_bjet_0_eta->Fill(bjet_0_p4->Eta());
 		h_bjet_0_phi->Fill(bjet_0_p4->Phi());
 
-			
-		//cout << "muon_0_pt: " << muon_0_p4->Pt() << "	lep_0_pt: " << lep_0_p4->Pt() << endl;
 
 	}
 	
 	// Set style for histograms //
-	h_elec_pt->SetLineColor(8);			// pT
+	/*h_elec_pt->SetLineColor(8);			// pT
 	h_elec_pt->GetXaxis()->SetTitle("pT (GeV)");
 	h_elec_pt->GetYaxis()->SetTitle("Counts");
 	
@@ -146,15 +128,13 @@ void MC_Analysis::Loop()
 
 	h_tau_pt->SetLineColor(8);
 	h_tau_pt->GetXaxis()->SetTitle("pT (GeV)");
-	h_tau_pt->GetYaxis()->SetTitle("Counts");
+	h_tau_pt->GetYaxis()->SetTitle("Counts");*/
 
 	// Create file to write histograms	
-	//TFile *hfile = gROOT->FindObject("hsimple.root"); if (hfile) hfile->Close();
-  	//hfile = new TFile("hsimple.root","RECREATE","Demo ROOT file with histograms");
-	TFile outfile("OutputFiles.root","RECREATE");
+	TFile outfile(TString::Format("%s.root",choice.c_str()),"RECREATE");
 
 	h_lep_n->Write();
-
+/*
 	h_lep_type->Write();
 
 	h_elec_pt->Write();
@@ -163,15 +143,21 @@ void MC_Analysis::Loop()
 	h_elec_pt_FC->Write();
 	h_muon_pt_FC->Write();
 	h_tau_pt_FC->Write();
-
+*/
 	h_elec_inv_mass->Write();
 	h_muon_inv_mass->Write();
 	h_tau_inv_mass->Write();
+	h_elec_muon_inv_mass->Write();
+	h_muon_tau_inv_mass->Write();
+	h_elec_tau_inv_mass->Write();
 	h_elec_inv_mass_FC->Write();
 	h_muon_inv_mass_FC->Write();
 	h_tau_inv_mass_FC->Write();
+	h_elec_muon_inv_mass_FC->Write();
+	h_muon_tau_inv_mass_FC->Write();
+	h_elec_tau_inv_mass_FC->Write();
 
-	
+/*	
 	h_elec_iso_etcone20->Write();
 	h_muon_iso_etcone20->Write();
 	h_elec_iso_etcone20_FC->Write();
@@ -181,7 +167,7 @@ void MC_Analysis::Loop()
 	h_muon_iso_ptcone30->Write();
 	h_elec_iso_ptcone30_FC->Write();
 	h_muon_iso_ptcone30_FC->Write();
-
+*/
 	h_n_jets->Write();
 	
 	h_ljet_0_pt->Write();
@@ -199,8 +185,10 @@ void MC_Analysis::Loop()
 
 	outfile.Close();
 
-	// Opens a new TBrowser without having to ask the terminal manually
+
+	cout << "Done!" << endl;
 	gROOT->ProcessLine("new TBrowser");
+	
 	
 }
 
