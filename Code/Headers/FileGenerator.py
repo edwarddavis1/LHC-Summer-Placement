@@ -3,7 +3,7 @@ import os
 
 
 
-processes = ["zee2jets", "zmumu2jets", "ztt2jets", "zqqzll",
+processes = ["zee2jets", "zmumu2jets", "ztt2jets", "zqqzll","zqqzll_2",
 		"zmumu_mv0_70_cvetbvet","zmumu_mv0_70_cfilbvet"] 
 
 year = 2012	# Used to change between the pc2012 and pc2014 datasets
@@ -15,6 +15,8 @@ if year == 2014:
 		"ztt2jets":"/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.308094.Sh221_PDF30_Ztt2jets_Min_N_TChannel.D1.e5767_e5984_s3126_r9364_r9315_p3563.sv1_hist/user.sdysch.14361308._000001.hist-output.root",
 		
 		"zqqzll":"/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.363356.Sh221_PDF30_ZqqZll.D1.e5525_s3126_r9364_r9315_p3371.sv1_hist/user.sdysch.14362495._000001.hist-output.root",
+		
+		"zqqzll_2":"/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.363356.Sh221_PDF30_ZqqZll.D1.e5525_s3126_r9364_r9315_p3371.sv1_hist/user.sdysch.14362495._000002.hist-output.root",
 		
 		"zmumu_mv0_70_cvetbvet":"/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.364100.Sh221_PDF30_Zmumu_MV0_70_CVetBVet.D1.e5271_s3126_r9364_r9315_p3371.sv1_hist/user.sdysch.14362886._000001.hist-output.root",
 
@@ -30,6 +32,8 @@ elif year == 2012: # Just change "/pc2014-data4" to "/pc2012-data1"
 		"ztt2jets":"/pc2012-data1/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.308094.Sh221_PDF30_Ztt2jets_Min_N_TChannel.D1.e5767_e5984_s3126_r9364_r9315_p3563.sv1_hist/user.sdysch.14361308._000001.hist-output.root",
 		
 		"zqqzll":"/pc2012-data1/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.363356.Sh221_PDF30_ZqqZll.D1.e5525_s3126_r9364_r9315_p3371.sv1_hist/user.sdysch.14362495._000001.hist-output.root",
+		
+		"zqqzll_2":"/pc2012-data1/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.363356.Sh221_PDF30_ZqqZll.D1.e5525_s3126_r9364_r9315_p3371.sv1_hist/user.sdysch.14362495._000002.hist-output.root",
 		
 		"zmumu_mv0_70_cvetbvet":"/pc2012-data1/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.364100.Sh221_PDF30_Zmumu_MV0_70_CVetBVet.D1.e5271_s3126_r9364_r9315_p3371.sv1_hist/user.sdysch.14362886._000001.hist-output.root",
 
