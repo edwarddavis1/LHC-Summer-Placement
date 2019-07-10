@@ -24,6 +24,7 @@ public :
    ///--------------- My Function Definitions ---------------///
    #include "FunctionDefinitions.h"
     ///------------------ LEPTON INFORMATION ------------------///  
+    string lep_type;
 
     Int_t n_leptons; 
 
@@ -43,7 +44,9 @@ public :
     TLorentzVector  *lep_1_invis_p4; 
     TLorentzVector  *lep_0_vis_p4; 
     TLorentzVector *lep_1_vis_p4; 
-
+    ///----------------- SIMULATION CHOOSING -----------------///
+    TString decay_chain_file;
+    string choice;
 
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
@@ -1618,13 +1621,17 @@ public :
 #ifdef MC_Analysis_cxx
 MC_Analysis::MC_Analysis(TTree *tree) : fChain(0) 
 {
+///---- Select which dataset you want to use ----///
+
+#include "ChosenFile.h"
+cout << decay_chain_file << endl;
+
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
-
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.308093.Sh221_PDF30_Zmm2jets_Min_N_TChannel.D1.e5767_e5984_s3126_r9364_r9315_p3563.sv1_hist/user.sdysch.14357860._000001.hist-output.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(decay_chain_file);
       if (!f || !f->IsOpen()) {
-         f = new TFile("/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc/user.sdysch.v5.0.mc16_13TeV.308093.Sh221_PDF30_Zmm2jets_Min_N_TChannel.D1.e5767_e5984_s3126_r9364_r9315_p3563.sv1_hist/user.sdysch.14357860._000001.hist-output.root");
+         f = new TFile(decay_chain_file);
       }
       f->GetObject("NOMINAL",tree);
 
