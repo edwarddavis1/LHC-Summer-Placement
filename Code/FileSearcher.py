@@ -18,36 +18,45 @@ elif host == "pc2012":
 	MC_path = "/pc2012-data1/sam/VBF_Ztt/HIGG8D1/v5.0/mc"
 	specifics_start = 7
 	
-found_dir = False	# Used to check whether a directory was found or not
+found_dir = None	# Used to check whether a directory was found or not
 file_paths = []	
 file_specifics = []
 
-while found_dir == False:
-	choice = raw_input("Enter which specific process you want to analyse (if multiple words, separate with _): ")
+while found_dir == None:
+	user_input = raw_input("Enter which specific process you want to analyse (if multiple words, separate with _): ")
 	#choice = "Zee2jets"
+	user_input = user_input.replace(" ","")	# remove spaces
+	chains = user_input.split(",")	# get list of chains from input
 	print("Here's what I found:")
 
 	# Searches the MC directory for sub-directories containing strings of what the user entered
 	# Then prints out the paths to all files within the found directory
-	for dirnames in os.walk(MC_path):
-		for dirname in dirnames:
-			if choice in dirname:	
-				found_dir = True
-				for filenames in os.walk(dirname):
+	for i in range(len(chains)):
+		if found_dir == None:
+			found_dir = None
+		else:
+			found_dir = False
+		for dirnames in os.walk(MC_path):
+			for dirname in dirnames:
+				if chains[i] in dirname:	
+					found_dir = True
+					for filenames in os.walk(dirname):
 										
-					# Writes out the full file path
-					filename = filenames[2][0]
-					file_path = dirname+"/"+filename
+						# Writes out the full file path
+						filename = filenames[2][0]
+						file_path = dirname+"/"+filename
 					
-					# Finds out the specifics of the process e.g. Zee_MV0_70_CVetBVet
-					file_specific = "_".join(file_path.split(".")[specifics_start].split("_")[2:]) 
-					print(file_specific)
-					#print(file_path)	
-					file_paths.append(file_path)
-					file_specifics.append(file_specific)	
+						# Finds out the specifics of the process e.g. Zee_MV0_70_CVetBVet
+						file_specific = "_".join(file_path.split(".")[specifics_start].split("_")[2:])
+						
+						# Remove duplicate processes found in higgs
+						if file_specific not in file_specifics:
+							print(file_specific)
+							file_paths.append(file_path)
+							file_specifics.append(file_specific)
 										
-	if found_dir == False:
-		print("I'm sorry, I couldn't find a matching simulation!")
+		if found_dir == False or found_dir == None:
+			print("I'm sorry, I couldn't find a matching simulation to %s!"%chains[i])
 
 print("Are you sure you want to analyse all %i of these simulations?\n"%len(file_paths))
 confirm_run = raw_input("y/n: ")
