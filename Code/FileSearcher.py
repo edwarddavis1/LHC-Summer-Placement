@@ -23,8 +23,8 @@ file_paths = []
 file_specifics = []
 
 while found_dir == None:
-	user_input = raw_input("Enter which specific process you want to analyse (if multiple words, separate with _): ")
-	#choice = "Zee2jets"
+	#user_input = raw_input("Enter which specific process you want to analyse (if multiple words, separate with _): ")
+	user_input = "Ztt2jets, Zee2jets, Zmm2jets"
 	user_input = user_input.replace(" ","")	# remove spaces
 	chains = user_input.split(",")	# get list of chains from input
 	print("Here's what I found:")
@@ -66,6 +66,7 @@ if confirm_run == "y":
 	# Analysis 
 	print("\nBegining analysis...")
 	for i in range(len(file_paths)):
+		print(i)
 		print("Analysing %s, %i/%i"%(file_specifics[i],i+1,len(file_paths)))
 		with open(os.path.join("Headers","ChosenFile.h"), "w") as text_file:
 			text_file.write("decay_chain_file = "+'"%s";\nchoice = "%s";'%(file_paths[i],file_specifics[i]))
