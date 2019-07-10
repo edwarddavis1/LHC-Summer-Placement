@@ -23,7 +23,7 @@ file_paths = []
 file_specifics = []
 
 while found_dir == False:
-	choice = raw_input("Enter which process you want to analyse: ")
+	choice = raw_input("Enter which specific process you want to analyse (if multiple words, separate with _): ")
 	#choice = "Zee2jets"
 	print("Here's what I found:")
 
@@ -41,38 +41,40 @@ while found_dir == False:
 					
 					# Finds out the specifics of the process e.g. Zee_MV0_70_CVetBVet
 					file_specific = "_".join(file_path.split(".")[specifics_start].split("_")[2:]) 
-					print("\n"+file_specific)
-					print(file_path)	
+					print(file_specific)
+					#print(file_path)	
 					file_paths.append(file_path)
 					file_specifics.append(file_specific)	
-									
-					# Analyse this file
-					with open(os.path.join("Headers","ChosenFile.h"), "w") as text_file:
-						text_file.write("decay_chain_file = "+'"%s";\nchoice = "%s";'%(file_path,file_specific))
 										
 	if found_dir == False:
 		print("I'm sorry, I couldn't find a matching simulation!")
 
+print("Are you sure you want to analyse all %i of these simulations?\n"%len(file_paths))
+confirm_run = raw_input("y/n: ")
 
+if confirm_run == "y":
 
-# Analysis 
-print("\nBegining analysis...")
-for i in range(len(file_paths)):
-	print("Analysing %s, %i/%i"%(file_specifics[i],i+1,len(file_paths)))
-	with open(os.path.join("Headers","ChosenFile.h"), "w") as text_file:
-		text_file.write("decay_chain_file = "+'"%s";\nchoice = "%s";'%(file_paths[i],file_specifics[i]))
+	# Analysis 
+	print("\nBegining analysis...")
+	for i in range(len(file_paths)):
+		print("Analysing %s, %i/%i"%(file_specifics[i],i+1,len(file_paths)))
+		with open(os.path.join("Headers","ChosenFile.h"), "w") as text_file:
+			text_file.write("decay_chain_file = "+'"%s";\nchoice = "%s";'%(file_paths[i],file_specifics[i]))
 
-	r.gROOT.Reset()
-	r.gROOT.ProcessLine(".L MC_Analysis.C")
-	r.gROOT.ProcessLine("MC_Analysis t")
-	r.gROOT.ProcessLine("t.Loop();")
+		r.gROOT.Reset()
+		r.gROOT.ProcessLine(".L MC_Analysis.C")
+		r.gROOT.ProcessLine("MC_Analysis t")
+		r.gROOT.ProcessLine("t.Loop();")
 	
-	if i != len(file_paths)-1:
-		r.gROOT.ProcessLine(".q")
-	else:
-		r.gROOT.ProcessLine("new TBrowser")
-		os.system("root -l")
+		if i != len(file_paths)-1:
+			r.gROOT.ProcessLine(".q")
+		else:
+			r.gROOT.ProcessLine("new TBrowser")
+			os.system("root -l")
 
+else:
+	print("Analysis aborted...Restarting...")
+	os.system("python FileSearcher.py")
 
 
 
