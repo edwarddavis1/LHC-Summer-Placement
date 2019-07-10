@@ -20,11 +20,11 @@ elif host == "pc2012":
 	
 found_dir = None	# Used to check whether a directory was found or not
 file_paths = []	
-file_specifics = []
+chain_names = []
 
 while found_dir == None:
-	#user_input = raw_input("Enter which specific process you want to analyse (if multiple words, separate with _): ")
-	user_input = "Ztt2jets, Zee2jets, Zmm2jets"
+	user_input = raw_input("Enter which specific process you want to analyse (if multiple words, separate with _): ")
+	#user_input = "Zee2jets"
 	user_input = user_input.replace(" ","")	# remove spaces
 	chains = user_input.split(",")	# get list of chains from input
 	print("Here's what I found:")
@@ -50,10 +50,10 @@ while found_dir == None:
 						file_specific = "_".join(file_path.split(".")[specifics_start].split("_")[2:])
 						
 						# Remove duplicate processes found in higgs
-						if file_specific not in file_specifics:
+						if file_specific not in chain_names:
 							print(file_specific)
 							file_paths.append(file_path)
-							file_specifics.append(file_specific)
+							chain_names.append(file_specific)
 										
 		if found_dir == False or found_dir == None:
 			print("I'm sorry, I couldn't find a matching simulation to %s!"%chains[i])
@@ -63,25 +63,33 @@ confirm_run = raw_input("y/n: ")
 
 if confirm_run == "y":
 
-	# Analysis 
+	# ------ ANALYSIS ------ #
 	print("\nBegining analysis...")
+	
 	for i in range(len(file_paths)):
 		print(i)
-		print("Analysing %s, %i/%i"%(file_specifics[i],i+1,len(file_paths)))
-		with open(os.path.join("Headers","ChosenFile.h"), "w") as text_file:
-			text_file.write("decay_chain_file = "+'"%s";\nchoice = "%s";'%(file_paths[i],file_specifics[i]))
+		print("Analysing %s, %i/%i"%(chain_names[i],i+1,len(file_paths)))
 
 		r.gROOT.Reset()
 		r.gROOT.ProcessLine(".L MC_Analysis.C")
-		r.gROOT.ProcessLine("MC_Analysis t")
-		r.gROOT.ProcessLine("t.Loop();")
+		#r.gROOT.ProcessLine("MC_Analysis t")
+		#r.gROOT.ProcessLine("t.Loop()")
+		r.gROOT.ProcessLine('TFile *file_%s = new TFile("%s")'%(chain_names[i],file_paths[i]))
+		r.gROOT.ProcessLine("TTree *tree_%s = new TTree"%chain_names[i])
+		r.gROOT.ProcessLine('file_%s->GetObject("NOMINAL",tree_%s)'%(chain_names[i],chain_names[i]))
+
+		# create new instance of MC_Analysis and loop over events
+		r.gROOT.ProcessLine("MC_Analysis* t_%s = new MC_Analysis(tree_%s)"%(chain_names[i],chain_names[i]))
+		r.gROOT.ProcessLine("t_%s->Loop()"%chain_names[i])
+
+		os.system("mv outfile.root OutputFiles/" + chain_names[i] + ".root")
 	
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
 		else:
 			r.gROOT.ProcessLine("new TBrowser")
 			os.system("root -l")
-
+	
 else:
 	print("Analysis aborted...Restarting...")
 	os.system("python FileSearcher.py")
