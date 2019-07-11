@@ -94,7 +94,7 @@ if run_analysis == True:
 	print("\nBegining analysis...")
 	
 	for i in range(len(file_paths)):
-		print("Analysing %s	%s, (%i/%i)"%(chain_names[i],file_sizes[i],i+1,len(file_paths)))
+		print("Analysing %s	%.2f GB, (%i/%i)"%(chain_names[i],file_sizes[i],i+1,len(file_paths)))
 
 		# Reset environment
 		r.gROOT.Reset()
@@ -111,11 +111,12 @@ if run_analysis == True:
 		r.gROOT.ProcessLine("MC_Analysis* t_%s = new MC_Analysis(tree_%s)"%(chain_names[i],chain_names[i]))
 		r.gROOT.ProcessLine("t_%s->Loop()"%chain_names[i])
 
-		# Check if the process file already exists, if it doesn't and chaining is on, the sub-process .root file will be deleted to prevent cluttering
-		file_exist.append(os.path.isfile('OutputFiles/%s.root'%chain_names[i]))
 
 		# Rename output file as the chain name and put into OutputFiles
-		os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
+		if run_chain == True:
+			os.system("mv outfile.root OutputFiles/Sub-Processes/%s.root"%chain_names[i])
+		if run_chain == False:
+			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 	
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
@@ -129,7 +130,7 @@ if run_chain == True:
 	
 	# Store the histograms from the first seciton of data in a list
 	totHist = []
-	sec0 = r.TFile("OutputFiles/%s.root"%chain_names[0])	# first file
+	sec0 = r.TFile("OutputFiles/Sub-Processes%s.root"%chain_names[0])	# first file
 	key0 = sec0.GetListOfKeys()				# first list of keys
 	for j in range(len(key0)):
 		totHist.append(sec0.Get(key0[j].GetName()))
@@ -138,7 +139,7 @@ if run_chain == True:
 	for i in range(1, len(chain_names)):
 
 		# Read in the output file for this seciton of data
-		secFile = r.TFile("OutputFiles/%s.root"%chain_names[i])
+		secFile = r.TFile("OutputFiles/Sub-Processes/%s.root"%chain_names[i])
 
 		# Get histogram keys
 		keys = secFile.GetListOfKeys()
@@ -152,10 +153,6 @@ if run_chain == True:
 		for hist in totHist:
 			hist.Write()
 		totFile.Close()
-	for i in range(len(chain_names)):
-		if file_exist[i] == False:
-			print("Deleting file: %s"%chain_names[i])
-			r.gROOT.ProcessLine('rm OutputFiles/%s.root'%chain_names[i])
 		
 	print("Chain %s Complete!"%chains[0])
 	r.gROOT.ProcessLine("new TBrowser")
