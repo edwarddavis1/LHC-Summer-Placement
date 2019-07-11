@@ -22,20 +22,12 @@ found_dir = None	# Used to check whether a directory was found or not
 file_paths = []	
 chain_names = []
 
-print("Would you like to make a chain?")
-confirm_chain = raw_input("y/n: ")
-if confirm_chain == "y":
-	print("Making chain...")
-
 while found_dir == None:
-	if confirm_chain == "y":
-		user_input = raw_input("Name your chain, I'll find all files with that string: ")
-	else:
-		user_input = raw_input("Enter which specific process(es) you want to analyse: ")
+	user_input = raw_input("Enter which specific process(es) you want to analyse: ")
 	#user_input = "Zee2jets"
 	user_input = user_input.replace(" ","")	# remove spaces
 	chains = user_input.split(",")	# get list of chains from input
-	print("Here's what I found:")
+	print("Here's what I found:\n")
 
 	# Searches the MC directory for sub-directories containing strings of what the user entered
 	# Then prints out the paths to all files within the found directory
@@ -67,10 +59,27 @@ while found_dir == None:
 		if found_dir == False or found_dir == None:
 			print("I'm sorry, I couldn't find a matching simulation to %s!"%chains[i])
 
-print("Are you sure you want to analyse all %i of these simulations?\n"%len(file_paths))
-confirm_run = raw_input("y/n: ")
+print("\nI found %i simulations\n"%len(file_paths))
+run_analysis = False
+run_chain = False
+run_restart = False
+while run_analysis == False and run_chain == False and run_restart == False:
+	print("Would you like to (a): Analyse these files, (b): Chain these files, (c): Analyse, then chain these files, or (d): Restart?")
+	run_choice = raw_input("Input: ").lower()
+	
+	if run_choice == 'a':
+		run_analysis = True
+	elif run_choice == 'b':
+		run_chain = True
+	elif run_choice == 'c':
+		run_analysis = True
+		run_chain = True
+	elif run_choice == 'd':
+		run_restart = True
+	else:
+		print("Error: please type either a, b, c or d")
 
-if confirm_run == "y":
+if run_analysis == True:
 
 	# ------ ANALYSIS ------ #
 	print("\nBegining analysis...")
@@ -99,46 +108,44 @@ if confirm_run == "y":
 	
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
+		else: 
+			r.gROOT.ProcessLine("new TBrowser")
+			os.system("root -l")
+			
+if run_chain == True:
+	print("\nMaking chain...")
 	
-		
-	if confirm_chain == "y":
-		print("Making chain...")
-		
-		# Store the histograms from the first seciton of data in a list
-		totHist = []
-		sec0 = r.TFile("OutputFiles/%s.root"%chain_names[0])	# first file
-		key0 = sec0.GetListOfKeys()				# first list of keys
-		for j in range(len(key0)):
-			totHist.append(sec0.Get(key0[j].GetName()))
-	
-		# Loop over other output files
-		for i in range(1, len(chain_names)):
+	# Store the histograms from the first seciton of data in a list
+	totHist = []
+	sec0 = r.TFile("OutputFiles/%s.root"%chain_names[0])	# first file
+	key0 = sec0.GetListOfKeys()				# first list of keys
+	for j in range(len(key0)):
+		totHist.append(sec0.Get(key0[j].GetName()))
 
-			# Read in the output file fofr this seciton of data
-			secFile = r.TFile("OutputFiles/%s.root"%chain_names[i])
+	# Loop over other output files
+	for i in range(1, len(chain_names)):
+
+		# Read in the output file fofr this seciton of data
+		secFile = r.TFile("OutputFiles/%s.root"%chain_names[i])
+
+		# Get histogram keys
+		keys = secFile.GetListOfKeys()
+
+		# Loop over histograms in the file and add them cumulatively
+		for j in range(len(keys)):
+			totHist[j].Add(secFile.Get(keys[j].GetName()))
 	
-			# Get histogram keys
-			keys = secFile.GetListOfKeys()
-	
-			# Loop over histograms in the file and add them cumulatively
-			for j in range(len(keys)):
-				totHist[j].Add(secFile.Get(keys[j].GetName()))
-		
-			# Save the combined histograms to a file
-			totFile = r.TFile("OutputFiles/%s.root"%chains[0],"RECREATE")
-			for hist in totHist:
-				hist.Write()
-			totFile.Close()
-		print("Chain %s Complete!"%chains[0])
-		r.gROOT.ProcessLine("new TBrowser")
-		
-		
-	else:
-		r.gROOT.ProcessLine("new TBrowser")
-	
-	
-else:
-	print("Analysis aborted...Restarting...")
+		# Save the combined histograms to a file
+		totFile = r.TFile("OutputFiles/%s.root"%chains[0],"RECREATE")
+		for hist in totHist:
+			hist.Write()
+		totFile.Close()
+	print("Chain %s Complete!"%chains[0])
+	r.gROOT.ProcessLine("new TBrowser")
+	os.system("root -l")
+
+if run_restart == True:
+	print("\nAnalysis aborted...Restarting...\n")
 	os.system("python FileSearcher.py")
 
 
