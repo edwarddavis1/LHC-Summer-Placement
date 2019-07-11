@@ -81,7 +81,7 @@ void MC_Analysis::Loop()
 			}
 			else {
 				double dilep_inv_mass_FC = InvariantMass(lep_0_p4, lep_1_p4);							
-				//if (lep_type == "Electron") h_elec_inv_mass_FC->Fill(dilep_inv_mass_FC);
+				if (lep_type == "Electron") h_elec_inv_mass_FC->Fill(dilep_inv_mass_FC);
 				if (lep_type == "Muon") h_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
 				if (lep_type == "Tau") h_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
 				if (lep_type == "ElectronMuon") h_elec_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
@@ -116,9 +116,8 @@ void MC_Analysis::Loop()
 
 
 	}
-	cout << decay_chain_file << endl;
+	
 	// Create file to write histograms
-	cout << TString::Format("%s.root",choice.c_str()) << endl;
 	TFile outfile("outfile.root","RECREATE");
 
 	h_lep_n->Write();
