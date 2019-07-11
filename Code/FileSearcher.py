@@ -22,8 +22,16 @@ found_dir = None	# Used to check whether a directory was found or not
 file_paths = []	
 chain_names = []
 
+print("Would you like to make a chain?")
+confirm_chain = raw_input("y/n: ")
+if confirm_chain == "y":
+	print("Making chain...")
+
 while found_dir == None:
-	user_input = raw_input("Enter which specific process you want to analyse (if multiple words, separate with _): ")
+	if confirm_chain == "y":
+		user_input = raw_input("Name your chain, I'll find all files with that string: ")
+	else:
+		user_input = raw_input("Enter which specific process(es) you want to analyse: ")
 	#user_input = "Zee2jets"
 	user_input = user_input.replace(" ","")	# remove spaces
 	chains = user_input.split(",")	# get list of chains from input
@@ -36,9 +44,10 @@ while found_dir == None:
 			found_dir = None
 		else:
 			found_dir = False
+			
 		for dirnames in os.walk(MC_path):
 			for dirname in dirnames:
-				if chains[i] in dirname:	
+				if chains[i] in dirname:
 					found_dir = True
 					for filenames in os.walk(dirname):
 										
@@ -46,14 +55,14 @@ while found_dir == None:
 						filename = filenames[2][0]
 						file_path = dirname+"/"+filename
 					
-						# Finds out the specifics of the process e.g. Zee_MV0_70_CVetBVet
-						file_specific = "_".join(file_path.split(".")[specifics_start].split("_")[2:])
+						# Finds out the name of the chain e.g. Zee_MV0_70_CVetBVet
+						chain_name = "_".join(file_path.split(".")[specifics_start].split("_")[2:])
 						
 						# Remove duplicate processes found in higgs
-						if file_specific not in chain_names:
-							print(file_specific)
+						if chain_name not in chain_names:
+							print(chain_name)
 							file_paths.append(file_path)
-							chain_names.append(file_specific)
+							chain_names.append(chain_name)
 										
 		if found_dir == False or found_dir == None:
 			print("I'm sorry, I couldn't find a matching simulation to %s!"%chains[i])
@@ -70,25 +79,63 @@ if confirm_run == "y":
 		print(i)
 		print("Analysing %s, %i/%i"%(chain_names[i],i+1,len(file_paths)))
 
+		# Reset environment
 		r.gROOT.Reset()
+		
+		# Load in macro
 		r.gROOT.ProcessLine(".L MC_Analysis.C")
-		#r.gROOT.ProcessLine("MC_Analysis t")
-		#r.gROOT.ProcessLine("t.Loop()")
+		
+		# Load in tree from file
 		r.gROOT.ProcessLine('TFile *file_%s = new TFile("%s")'%(chain_names[i],file_paths[i]))
 		r.gROOT.ProcessLine("TTree *tree_%s = new TTree"%chain_names[i])
-		r.gROOT.ProcessLine('file_%s->GetObject("NOMINAL",tree_%s)'%(chain_names[i],chain_names[i]))
+		r.gROOT.ProcessLine('file_%s->GetObject("NOMINAL",tree_%s)'%(chain_names[i],chain_names[i]))	# "NOMINAL" is the object got by the new tree from the file
 
-		# create new instance of MC_Analysis and loop over events
+		# Create new instance of MC_Analysis and loop over events
 		r.gROOT.ProcessLine("MC_Analysis* t_%s = new MC_Analysis(tree_%s)"%(chain_names[i],chain_names[i]))
 		r.gROOT.ProcessLine("t_%s->Loop()"%chain_names[i])
 
-		os.system("mv outfile.root OutputFiles/" + chain_names[i] + ".root")
+		# Rename output file as the chain name and put into OutputFiles
+		os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 	
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
-		else:
-			r.gROOT.ProcessLine("new TBrowser")
-			os.system("root -l")
+	
+		
+	if confirm_chain == "y":
+		print("Making chain...")
+		
+		# Store the histograms from the first seciton of data in a list
+		totHist = []
+		sec0 = r.TFile("OutputFiles/%s.root"%chain_names[0])	# first file
+		key0 = sec0.GetListOfKeys()				# first list of keys
+		for j in range(len(key0)):
+			totHist.append(sec0.Get(key0[j].GetName()))
+	
+		# Loop over other output files
+		for i in range(1, len(chain_names)):
+
+			# Read in the output file fofr this seciton of data
+			secFile = r.TFile("OutputFiles/%s.root"%chain_names[i])
+	
+			# Get histogram keys
+			keys = secFile.GetListOfKeys()
+	
+			# Loop over histograms in the file and add them cumulatively
+			for j in range(len(keys)):
+				totHist[j].Add(secFile.Get(keys[j].GetName()))
+		
+			# Save the combined histograms to a file
+			totFile = r.TFile("OutputFiles/%s.root"%chains[0],"RECREATE")
+			for hist in totHist:
+				hist.Write()
+			totFile.Close()
+		print("Chain %s Complete!"%chains[0])
+		r.gROOT.ProcessLine("new TBrowser")
+		
+		
+	else:
+		r.gROOT.ProcessLine("new TBrowser")
+	
 	
 else:
 	print("Analysis aborted...Restarting...")
