@@ -1624,7 +1624,6 @@ MC_Analysis::MC_Analysis(TTree *tree) : fChain(0)
 ///---- Select which dataset you want to use ----///
 
 #include "ChosenFile.h"
-cout << decay_chain_file << endl;
 
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
