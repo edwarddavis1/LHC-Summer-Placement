@@ -10,23 +10,31 @@ print("Getting data from computer: %s..."%host)
 
 if host == "higgs":
 	MC_path = "/higgs-data3/sam/forTomRyunAliceLuca/v03/mc"
-	specifics_start = 6	# specifics_start refers to the amount of "."'s before the substring telling you the specifics of the dataset
+	chain_start = 6	# chain_start refers to the amount of "."'s before the substring telling you the specifics of the dataset
 elif host == "pc2014":
 	MC_path = "/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc"
-	specifics_start = 7
+	chain_start = 7
 elif host == "pc2012":
 	MC_path = "/pc2012-data1/sam/VBF_Ztt/HIGG8D1/v5.0/mc"
-	specifics_start = 7
+	chain_start = 7
 	
 found_dir = None	# Used to check whether a directory was found or not
-file_paths = []	
-chain_names = []
+file_paths = []		# List of chosen file paths
+chain_names = []	# List of chosen file chain names
+file_sizes = []		# List of file sizes
+file_exist = []		# Lists chosen chain names with an associated truth to whether it is a sub-process or not (only if chaining)
 
 while found_dir == None:
 	user_input = raw_input("Enter which specific process(es) you want to analyse: ")
 	#user_input = "Zee2jets"
-	user_input = user_input.replace(" ","")	# remove spaces
+	user_input = user_input.replace(" ","")	# remove spaces	
 	chains = user_input.split(",")	# get list of chains from input
+	
+	# Prevent bug where by typing "Ztt" all the files get chose (/mc directory contains the sub-string "Ztt")
+	for i in range(len(chains)):
+		if chains[i] == "Ztt":
+			chains[i] = "Ztt_"
+	
 	print("Here's what I found:\n")
 
 	# Searches the MC directory for sub-directories containing strings of what the user entered
@@ -39,22 +47,23 @@ while found_dir == None:
 			
 		for dirnames in os.walk(MC_path):
 			for dirname in dirnames:
-				if chains[i] in dirname:
+				if chains[i] in dirname and dirname != MC_path:	# prevents the program grabbing the /mc directory
 					found_dir = True
 					for filenames in os.walk(dirname):
-										
 						# Writes out the full file path
 						filename = filenames[2][0]
 						file_path = dirname+"/"+filename
-					
+											
 						# Finds out the name of the chain e.g. Zee_MV0_70_CVetBVet
-						chain_name = "_".join(file_path.split(".")[specifics_start].split("_")[2:])
+						chain_name = "_".join(file_path.split(".")[chain_start].split("_")[2:])
 						
 						# Remove duplicate processes found in higgs
 						if chain_name not in chain_names:
-							print(chain_name)
+							file_size = os.path.getsize(file_path)/1e9	# Gets the size of file in GB
+							print("%s		%.2f GB"%(chain_name,file_size))
 							file_paths.append(file_path)
 							chain_names.append(chain_name)
+							file_sizes.append(file_size)
 										
 		if found_dir == False or found_dir == None:
 			print("I'm sorry, I couldn't find a matching simulation to %s!"%chains[i])
@@ -85,8 +94,7 @@ if run_analysis == True:
 	print("\nBegining analysis...")
 	
 	for i in range(len(file_paths)):
-		print(i)
-		print("Analysing %s, %i/%i"%(chain_names[i],i+1,len(file_paths)))
+		print("Analysing %s	%s, (%i/%i)"%(chain_names[i],file_sizes[i],i+1,len(file_paths)))
 
 		# Reset environment
 		r.gROOT.Reset()
@@ -103,17 +111,21 @@ if run_analysis == True:
 		r.gROOT.ProcessLine("MC_Analysis* t_%s = new MC_Analysis(tree_%s)"%(chain_names[i],chain_names[i]))
 		r.gROOT.ProcessLine("t_%s->Loop()"%chain_names[i])
 
+		# Check if the process file already exists, if it doesn't and chaining is on, the sub-process .root file will be deleted to prevent cluttering
+		file_exist.append(os.path.isfile('OutputFiles/%s.root'%chain_names[i]))
+
 		# Rename output file as the chain name and put into OutputFiles
 		os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 	
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
-		else: 
+		if i == len(file_paths)-1 and run_chain == False: 
 			r.gROOT.ProcessLine("new TBrowser")
 			os.system("root -l")
 			
 if run_chain == True:
 	print("\nMaking chain...")
+	TChain_name = raw_input("Name your chain: ")
 	
 	# Store the histograms from the first seciton of data in a list
 	totHist = []
@@ -125,7 +137,7 @@ if run_chain == True:
 	# Loop over other output files
 	for i in range(1, len(chain_names)):
 
-		# Read in the output file fofr this seciton of data
+		# Read in the output file for this seciton of data
 		secFile = r.TFile("OutputFiles/%s.root"%chain_names[i])
 
 		# Get histogram keys
@@ -136,10 +148,15 @@ if run_chain == True:
 			totHist[j].Add(secFile.Get(keys[j].GetName()))
 	
 		# Save the combined histograms to a file
-		totFile = r.TFile("OutputFiles/%s.root"%chains[0],"RECREATE")
+		totFile = r.TFile("OutputFiles/%s.root"%TChain_name,"RECREATE")
 		for hist in totHist:
 			hist.Write()
 		totFile.Close()
+	for i in range(len(chain_names)):
+		if file_exist[i] == False:
+			print("Deleting file: %s"%chain_names[i])
+			r.gROOT.ProcessLine('rm OutputFiles/%s.root'%chain_names[i])
+		
 	print("Chain %s Complete!"%chains[0])
 	r.gROOT.ProcessLine("new TBrowser")
 	os.system("root -l")
@@ -147,5 +164,10 @@ if run_chain == True:
 if run_restart == True:
 	print("\nAnalysis aborted...Restarting...\n")
 	os.system("python FileSearcher.py")
+
+
+
+
+
 
 
