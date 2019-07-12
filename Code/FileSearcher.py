@@ -130,7 +130,7 @@ if run_chain == True:
 	
 	# Store the histograms from the first seciton of data in a list
 	totHist = []
-	sec0 = r.TFile("OutputFiles/Sub-Processes%s.root"%chain_names[0])	# first file
+	sec0 = r.TFile("OutputFiles/Sub-Processes/%s.root"%chain_names[0])	# first file
 	key0 = sec0.GetListOfKeys()				# first list of keys
 	for j in range(len(key0)):
 		totHist.append(sec0.Get(key0[j].GetName()))
