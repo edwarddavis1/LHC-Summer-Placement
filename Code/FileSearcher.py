@@ -109,6 +109,7 @@ if run_analysis == True:
 		r.gROOT.Reset()
 		
 		# Load in macro
+		r.gROOT.SetBatch(True)	# Turn on batch mode so that any graphics are blocked from opening
 		r.gROOT.ProcessLine(".L MC_Analysis.C")
 		
 		# Load in tree from file
@@ -130,6 +131,7 @@ if run_analysis == True:
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
 		if i == len(file_paths)-1 and run_sum == False: 
+			r.gROOT.SetBatch(False)	# Turn batch mode off so that TBrowser can start after analysis
 			r.gROOT.ProcessLine("new TBrowser")
 			os.system("root -l")
 			
