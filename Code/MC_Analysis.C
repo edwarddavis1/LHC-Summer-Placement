@@ -21,7 +21,7 @@ void MC_Analysis::Loop()
 	//------------------------------ Book Hists here ------------------------------//
 	/////////////////////////////////////////////////////////////////////////////////
 	#include "Headers/BookHistos.h"
-
+	
 	/////////////////////////////////////////////////////////////////////
 	///------------------ FOR LOOP USED IN ANALYSIS ------------------///
 	/////////////////////////////////////////////////////////////////////
@@ -90,30 +90,28 @@ void MC_Analysis::Loop()
 				h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
 
 			}
-			else {
-				double dilep_inv_mass_FC = InvariantMass(lep_0_p4, lep_1_p4);							
-				if (lep_type == "Electron") h_elec_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "Muon") h_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "Tau") h_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "ElectronMuon") h_elec_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "MuonTau") h_muon_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "ElectronTau") h_elec_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
+			double dilep_inv_mass_NoCut = InvariantMass(lep_0_p4, lep_1_p4);			
+			if (lep_type == "Electron") h_elec_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "Muon") h_muon_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "Tau") h_tau_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "ElectronMuon") h_elec_muon_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "MuonTau") h_muon_tau_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "ElectronTau") h_elec_tau_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			
+			h_elec_iso_etcone20->Fill(elec_0_iso_etcone20);
+			h_muon_iso_etcone20->Fill(muon_0_iso_etcone20);
 
-				h_elec_iso_etcone20_FC->Fill(elec_0_iso_etcone20);
-				h_muon_iso_etcone20_FC->Fill(muon_0_iso_etcone20);
+			h_elec_iso_ptcone30->Fill(elec_0_iso_ptcone30);
+			h_muon_iso_ptcone30->Fill(muon_0_iso_ptcone30);
+			
+			h_ljet_inv_mass->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
+			h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
 
-				h_elec_iso_ptcone30_FC->Fill(elec_0_iso_ptcone30);
-				h_muon_iso_ptcone30_FC->Fill(muon_0_iso_ptcone30);
-
-				h_ljet_inv_mass_FC->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
-				h_bjet_inv_mass_FC->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
-
-			}
+			
 		}
 		int lep_n;
 		h_lep_n->Fill(lep_n);
 		
-		h_elec_inv_mass_NoCut->Fill(
 		
 		// Jets
 		h_n_jets->Fill(n_jets);
@@ -125,21 +123,32 @@ void MC_Analysis::Loop()
 		h_bjet_0_pt->Fill(bjet_0_p4->Pt());
 		h_bjet_0_eta->Fill(bjet_0_p4->Eta());
 		h_bjet_0_phi->Fill(bjet_0_p4->Phi());
+		
+		h_elec_inv_mass->SetLineColor(4);
+		h_elec_inv_mass_NoCut->SetLineColor(3);
 
 
 	}
+	TCanvas *c_elec_inv_mass_cuts = new TCanvas("elec_inv_mass_cuts");
+	THStack *h_elec_inv_mass_cuts = new THStack("elec_inv_mass_cuts",TString::Format("Dilepton Invariant Mass from Electrons in MC %s with Cuts",choice.c_str()));
+	
+	h_elec_inv_mass_cuts->Add(h_elec_inv_mass);
+	h_elec_inv_mass_cuts->Add(h_elec_inv_mass_NoCut);
+	h_elec_inv_mass_cuts->Draw();
+	
+	c_elec_inv_mass_cuts->Modified();
+	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 	
 	// Create file to write histograms
 	TFile outfile("outfile.root","RECREATE");
 	#include "Headers/WriteHistos.h"
+	c_elec_inv_mass_cuts->Write();
 	outfile.Close();
 
 
 	cout << "Done!" << endl;
 	//gROOT->ProcessLine("new TBrowser");
-	
 
-	
    
 
 	
