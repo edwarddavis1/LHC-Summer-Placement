@@ -71,25 +71,27 @@ while found_dir == None:
 print("\nI found %i simulations\n"%len(file_paths))
 run_analysis = False
 run_sum = False
+run_stack = False
 run_restart = False
-while run_analysis == False and run_sum == False and run_restart == False:
-	print("Would you like to (a): Analyse these files, (b): Sum these files, (c): Analyse, then sum these files, or (d): Restart?")
+while run_analysis == False and run_sum == False and run_stack == False and run_restart == False:
+	print("Would you like to (a): Analyse these files\n (b): Sum these files       (c): Analyse, then sum these files\n (d): Stack these files     (e): Analyse, then stack these files\n (f): Restart?")
 	run_choice = raw_input("Input: ").lower()
 	
-	if run_choice == 'a':
+	if run_choice in ['a','c','e']:
 		run_analysis = True
-	elif run_choice == 'b':
+	if run_choice in ['b', 'c']:
 		run_sum = True
 		sum_name = raw_input("Name your summed data: ")
-	elif run_choice == 'c':
-		run_analysis = True
-		run_sum = True
-		sum_name = raw_input("Name your summed data: ")
-	elif run_choice == 'd':
+	if run_choice in ['d', 'e']:
+		run_stack = True
+		#stack_hist = raw_input("Which histogram would you like to stack?: ")
+		#stack_name = stack_hist+'_stack'
+		#stack_title = raw_input("Title your stack: ")
+	if run_choice == 'f':
 		run_restart = True
-	else:
-		print("Error: please type either a, b, c or d")
-
+	if run_choice not in ['a', 'b', 'c', 'd', 'e', 'f']:
+		print("Error: please type either option a, b, c, d, e or f")
+		
 if run_analysis == True:
 
 	# ------ ANALYSIS ------ #
@@ -117,10 +119,13 @@ if run_analysis == True:
 		r.gROOT.ProcessLine("TTree *tree_%s = new TTree"%chain_names[i])
 		r.gROOT.ProcessLine('file_%s->GetObject("NOMINAL",tree_%s)'%(chain_names[i],chain_names[i]))	# "NOMINAL" is the object got by the new tree from the file
 
+		if run_stack == True:
+			print("This has not been programmed yet!")
+
+
 		# Create new instance of MC_Analysis and loop over events
 		r.gROOT.ProcessLine("MC_Analysis* t_%s = new MC_Analysis(tree_%s)"%(chain_names[i],chain_names[i]))
 		r.gROOT.ProcessLine("t_%s->Loop()"%chain_names[i])
-
 
 		# Rename output file as the chain name and put into OutputFiles
 		if run_sum == True:
