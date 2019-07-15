@@ -112,8 +112,6 @@ void MC_Analysis::Loop()
 		int lep_n;
 		h_lep_n->Fill(lep_n);
 		
-		
-		// Jets
 		h_n_jets->Fill(n_jets);
 		
 		h_ljet_0_pt->Fill(ljet_0_p4->Pt());
@@ -132,6 +130,9 @@ void MC_Analysis::Loop()
 	TCanvas *c_elec_inv_mass_cuts = new TCanvas("elec_inv_mass_cuts");
 	THStack *h_elec_inv_mass_cuts = new THStack("elec_inv_mass_cuts",TString::Format("Dilepton Invariant Mass from Electrons in MC %s with Cuts",choice.c_str()));
 	
+	h_elec_inv_mass->SetFillColor(kCyan);
+	h_elec_inv_mass_NoCut->SetFillColor(kCyan-9);
+	
 	h_elec_inv_mass_cuts->Add(h_elec_inv_mass);
 	h_elec_inv_mass_cuts->Add(h_elec_inv_mass_NoCut);
 	h_elec_inv_mass_cuts->Draw();
@@ -142,16 +143,10 @@ void MC_Analysis::Loop()
 	// Create file to write histograms
 	TFile outfile("outfile.root","RECREATE");
 	#include "Headers/WriteHistos.h"
-	c_elec_inv_mass_cuts->Write();
+	//c_elec_inv_mass_cuts->Write();
 	outfile.Close();
 
-
 	cout << "Done!" << endl;
-	//gROOT->ProcessLine("new TBrowser");
-
-   
-
-	
 	
 }
 
