@@ -70,19 +70,21 @@ while found_dir == None:
 
 print("\nI found %i simulations\n"%len(file_paths))
 run_analysis = False
-run_chain = False
+run_sum = False
 run_restart = False
-while run_analysis == False and run_chain == False and run_restart == False:
-	print("Would you like to (a): Analyse these files, (b): Chain these files, (c): Analyse, then chain these files, or (d): Restart?")
+while run_analysis == False and run_sum == False and run_restart == False:
+	print("Would you like to (a): Analyse these files, (b): Sum these files, (c): Analyse, then sum these files, or (d): Restart?")
 	run_choice = raw_input("Input: ").lower()
 	
 	if run_choice == 'a':
 		run_analysis = True
 	elif run_choice == 'b':
-		run_chain = True
+		run_sum = True
+		sum_name = raw_input("Name your summed data: ")
 	elif run_choice == 'c':
 		run_analysis = True
-		run_chain = True
+		run_sum = True
+		sum_name = raw_input("Name your summed data: ")
 	elif run_choice == 'd':
 		run_restart = True
 	else:
@@ -95,6 +97,13 @@ if run_analysis == True:
 	
 	for i in range(len(file_paths)):
 		print("Analysing %s	%.2f GB, (%i/%i)"%(chain_names[i],file_sizes[i],i+1,len(file_paths)))
+		
+		with open("Headers/ChosenFile.h",'w') as ChoiceFile:
+			if run_sum == False:
+				ChoiceFile.write('choice = "%s";'%chain_names[i])
+			else:
+				ChoiceFile.write('choice = "%s";'%sum_name)
+		ChoiceFile.close()
 
 		# Reset environment
 		r.gROOT.Reset()
@@ -113,25 +122,24 @@ if run_analysis == True:
 
 
 		# Rename output file as the chain name and put into OutputFiles
-		if run_chain == True:
+		if run_sum == True:
 			os.system("mv outfile.root OutputFiles/Sub-Processes/%s.root"%chain_names[i])
-		if run_chain == False:
+		if run_sum == False:
 			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 	
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
-		if i == len(file_paths)-1 and run_chain == False: 
+		if i == len(file_paths)-1 and run_sum == False: 
 			r.gROOT.ProcessLine("new TBrowser")
 			os.system("root -l")
 			
-if run_chain == True:
-	print("\nMaking chain...")
-	TChain_name = raw_input("Name your chain: ")
+if run_sum == True:
+	print("\nSumming Histograms...")
 	
 	# Store the histograms from the first seciton of data in a list
 	totHist = []
 	sec0 = r.TFile("OutputFiles/Sub-Processes/%s.root"%chain_names[0])	# first file
-	key0 = sec0.GetListOfKeys()				# first list of keys
+	key0 = sec0.GetListOfKeys()						# first list of keys
 	for j in range(len(key0)):
 		totHist.append(sec0.Get(key0[j].GetName()))
 
@@ -149,12 +157,12 @@ if run_chain == True:
 			totHist[j].Add(secFile.Get(keys[j].GetName()))
 	
 		# Save the combined histograms to a file
-		totFile = r.TFile("OutputFiles/%s.root"%TChain_name,"RECREATE")
+		totFile = r.TFile("OutputFiles/%s.root"%sum_name,"RECREATE")
 		for hist in totHist:
 			hist.Write()
 		totFile.Close()
 		
-	print("Chain %s Complete!"%chains[0])
+	print("Sum %s Complete!"%chains[0])
 	r.gROOT.ProcessLine("new TBrowser")
 	os.system("root -l")
 
