@@ -39,3 +39,6 @@ TH1F* h_tau_inv_mass_NoCut = new TH1F("tau_inv_mass_NoCut", TString::Format("Inv
 TH1F* h_elec_muon_inv_mass_NoCut = new TH1F("elec_muon_inv_mass_NoCut", TString::Format("Invariant Mass from ElectronMuon in MC %s No Cuts",choice.c_str()), 500, 0, 150);
 TH1F* h_elec_tau_inv_mass_NoCut = new TH1F("elec_tau_inv_mass_NoCut", TString::Format("Invariant Mass from ElectronTau in MC %s No Cuts",choice.c_str()), 500, 0, 150);
 TH1F* h_muon_tau_inv_mass_NoCut = new TH1F("muon_tau_inv_mass_NoCut", TString::Format("Invariant Mass from MuonTau in MC %s No Cuts",choice.c_str()), 500, 0, 150);
+
+TH1F* h_Z_cent = new TH1F("Z_cent", "Z boson centrality", 500, -10, 10);
+TH1F* h_Z_cent_NoCut = new TH1F("Z_cent_NoCut", "Z boson centrality", 500, -10, 10);
