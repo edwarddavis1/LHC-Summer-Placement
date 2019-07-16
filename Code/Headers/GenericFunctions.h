@@ -12,6 +12,19 @@ void MC_Analysis::print_variable() {
 	cout << "elec_0_pt from func def: " << elec_0_p4->Pt() << endl;
 }
 
+
+// Calculates Centrality for Z boson
+double Centrality(TLorentzVector *Vector1, TLorentzVector *Vector2, TLorentzVector *Vector3, TLorentzVector *Vector4) {
+	
+	double Z_rapidity = ((*Vector1)+(*Vector2)).Rapidity(); // Z boson rapidity using muon 4 vectors
+	double j1_rapidity = Vector3->Eta();// jet 1 rapidity
+	double j2_rapidity = Vector4->Eta();// jet 2 rapidity	
+
+	double sum1 = Z_rapidity - (j1_rapidity + j2_rapidity)/2; // sum 1 to break things up
+	double Centrality = 2 * sum1/(Vector1->Rapidity() - Vector2->Rapidity());
+	return Centrality;
+}
+
 // Works out what type of event is occuring
 void MC_Analysis::event_type() {
 
@@ -253,19 +266,6 @@ bool MC_Analysis::initial_cuts_truth() {
 	
 
 	return passed_cuts;
-}
-/*
-void DrawHistogram(TH1F *histogram, string simulationName, string Name, string Title, double data, int bins, double min, double max) {
-	event_type();
-	histogram = new TH1F(Name, Title, bin, min, max);	
-	
-	
-	
-	TFile outfile(simulationName + ".root","RECREATE");
-}*/
-void MakeStack() {
-
-
 }
 
 
