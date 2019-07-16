@@ -12,7 +12,6 @@ void MC_Analysis::print_variable() {
 	cout << "elec_0_pt from func def: " << elec_0_p4->Pt() << endl;
 }
 
-
 // Calculates Centrality for Z boson
 double Centrality(TLorentzVector *Vector1, TLorentzVector *Vector2, TLorentzVector *Vector3, TLorentzVector *Vector4) {
 	
