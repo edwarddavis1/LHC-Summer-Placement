@@ -21,7 +21,7 @@ void MC_Analysis::Loop()
 	//------------------------------ Book Hists here ------------------------------//
 	/////////////////////////////////////////////////////////////////////////////////
 	#include "Headers/BookHistos.h"
-
+	
 	/////////////////////////////////////////////////////////////////////
 	///------------------ FOR LOOP USED IN ANALYSIS ------------------///
 	/////////////////////////////////////////////////////////////////////
@@ -52,19 +52,15 @@ void MC_Analysis::Loop()
 		ParticleSelection();
 		event_type();
 		
-		double lep_0_pt = lep_0_p4->Pt();
-		double lep_1_pt = lep_1_p4->Pt();
-		
-		double lep_0_phi = lep_0_p4->Phi();
-		double lep_0_eta = lep_0_p4->Eta();
+		#include "Headers/VariableExtraction.h"	// Extracts pt,eta,phi from 4-vectors
 		
 		h_lep_pt->Fill(lep_0_pt);
 		h_lep_phi->Fill(lep_0_phi);
 		h_lep_eta->Fill(lep_0_eta);
 		
-		h_elec_pt->Fill(elec_0_p4->Pt());
-		h_elec_phi->Fill(elec_0_p4->Phi());
-		h_elec_eta->Fill(elec_0_p4->Eta());
+		h_elec_pt->Fill(elec_0_pt);
+		h_elec_phi->Fill(elec_0_phi);
+		h_elec_eta->Fill(elec_0_eta);
 
 		// Apply selection cuts & fill
 		bool event_pair = event_pair_truth();		// True if event has lepton-antilepton pair		
@@ -88,61 +84,58 @@ void MC_Analysis::Loop()
 				
 				h_ljet_inv_mass->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
 				h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
+				
+				double Z_cent = Centrality(lep_0_p4, lep_1_p4, ljet_0_p4, ljet_1_p4);
+				h_Z_cent->Fill(Z_cent);
 
 			}
-			else {
-				double dilep_inv_mass_FC = InvariantMass(lep_0_p4, lep_1_p4);							
-				if (lep_type == "Electron") h_elec_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "Muon") h_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "Tau") h_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "ElectronMuon") h_elec_muon_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "MuonTau") h_muon_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
-				if (lep_type == "ElectronTau") h_elec_tau_inv_mass_FC->Fill(dilep_inv_mass_FC);
+			double dilep_inv_mass_NoCut = InvariantMass(lep_0_p4, lep_1_p4);			
+			if (lep_type == "Electron") h_elec_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "Muon") h_muon_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "Tau") h_tau_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "ElectronMuon") h_elec_muon_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "MuonTau") h_muon_tau_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			if (lep_type == "ElectronTau") h_elec_tau_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
+			
+			h_elec_iso_etcone20->Fill(elec_0_iso_etcone20);
+			h_muon_iso_etcone20->Fill(muon_0_iso_etcone20);
 
-				h_elec_iso_etcone20_FC->Fill(elec_0_iso_etcone20);
-				h_muon_iso_etcone20_FC->Fill(muon_0_iso_etcone20);
+			h_elec_iso_ptcone30->Fill(elec_0_iso_ptcone30);
+			h_muon_iso_ptcone30->Fill(muon_0_iso_ptcone30);
+			
+			h_ljet_inv_mass->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
+			h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
+			
+			double Z_cent_NoCut = Centrality(lep_0_p4, lep_1_p4, ljet_0_p4, ljet_1_p4);
+			h_Z_cent_NoCut->Fill(Z_cent_NoCut);
 
-				h_elec_iso_ptcone30_FC->Fill(elec_0_iso_ptcone30);
-				h_muon_iso_ptcone30_FC->Fill(muon_0_iso_ptcone30);
-
-				h_ljet_inv_mass_FC->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
-				h_bjet_inv_mass_FC->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
-
-			}
+			
 		}
 		int lep_n;
 		h_lep_n->Fill(lep_n);
 		
-		h_elec_inv_mass_NoCut->Fill(
-		
-		// Jets
 		h_n_jets->Fill(n_jets);
 		
-		h_ljet_0_pt->Fill(ljet_0_p4->Pt());
-		h_ljet_0_eta->Fill(ljet_0_p4->Eta());
-		h_ljet_0_phi->Fill(ljet_0_p4->Phi());
+		h_ljet_0_pt->Fill(ljet_0_pt);
+		h_ljet_0_eta->Fill(ljet_0_eta);
+		h_ljet_0_phi->Fill(ljet_0_phi);
 		
-		h_bjet_0_pt->Fill(bjet_0_p4->Pt());
-		h_bjet_0_eta->Fill(bjet_0_p4->Eta());
-		h_bjet_0_phi->Fill(bjet_0_p4->Phi());
+		h_bjet_0_pt->Fill(bjet_0_pt);
+		h_bjet_0_eta->Fill(bjet_0_eta);
+		h_bjet_0_phi->Fill(bjet_0_phi);
+		
+		h_elec_inv_mass->SetLineColor(4);
+		h_elec_inv_mass_NoCut->SetLineColor(3);
 
 
 	}
-	
+
 	// Create file to write histograms
 	TFile outfile("outfile.root","RECREATE");
 	#include "Headers/WriteHistos.h"
 	outfile.Close();
 
-
 	cout << "Done!" << endl;
-	//gROOT->ProcessLine("new TBrowser");
-	
-
-	
-   
-
-	
 	
 }
 

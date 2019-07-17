@@ -8,34 +8,48 @@ double InvariantMass(TLorentzVector *Vector1, TLorentzVector *Vector2) {
 	return inv_mass;
 }
 
+void MC_Analysis::print_variable() {
+	cout << "elec_0_pt from func def: " << elec_0_p4->Pt() << endl;
+}
+
+// Calculates Centrality for Z boson
+double Centrality(TLorentzVector *Vector1, TLorentzVector *Vector2, TLorentzVector *Vector3, TLorentzVector *Vector4) {
+	
+	double Z_rapidity = ((*Vector1)+(*Vector2)).Rapidity(); // Z boson rapidity using muon 4 vectors
+	double j1_rapidity = Vector3->Eta();// jet 1 rapidity
+	double j2_rapidity = Vector4->Eta();// jet 2 rapidity	
+
+	double sum1 = Z_rapidity - (j1_rapidity + j2_rapidity)/2; // sum 1 to break things up
+	double Centrality = 2 * sum1/(Vector1->Rapidity() - Vector2->Rapidity());
+	return Centrality;
+}
 
 // Works out what type of event is occuring
-string MC_Analysis::event_type() {
-	string event_type;
+void MC_Analysis::event_type() {
+
 	if (elec_0 > 0 && muon_0 == 0 && tau_0 == 0) {
-		event_type = "Electron";
+		lep_type = "Electron";
 	}
 	if (elec_0 == 0 && muon_0 > 0 && tau_0 == 0) {
-		event_type = "Muon";
+		lep_type = "Muon";
 	}
 	if (elec_0 == 0 && muon_0 == 0 && tau_0 > 0) {
-		event_type = "Tau";
+		lep_type = "Tau";
 	}
 	if (elec_0 == 0 && muon_0 > 0 && tau_0 > 0) {
-		event_type = "MuonTau";
+		lep_type = "MuonTau";
 	}
 	if (elec_0 > 0 && muon_0 == 0 && tau_0 > 0) {
-		event_type = "ElectronTau";
+		lep_type = "ElectronTau";
 	}
 	if (elec_0 > 0 && muon_0 > 0 && tau_0 == 0) {
-		event_type = "ElectronMuon";
+		lep_type = "ElectronMuon";
 	}
-	return event_type;
 }
 
 void MC_Analysis::ParticleSelection() {
-	
-	if (event_type() == "Electron") {
+	event_type();
+	if (lep_type == "Electron") {
 		lep_0 = & elec_0;
 		lep_0_p4 = elec_0_p4;
 		lep_0_q = & elec_0_q;
@@ -47,7 +61,7 @@ void MC_Analysis::ParticleSelection() {
 		n_leptons = n_electrons; 
 	}
 		
-	if (event_type() == "Muon") {
+	if (lep_type == "Muon") {
 		lep_0 = & muon_0;
 		lep_0_p4 = muon_0_p4;
 		lep_0_q = & muon_0_q;
@@ -59,7 +73,7 @@ void MC_Analysis::ParticleSelection() {
 		n_leptons = n_muons; 
 	}
 
-	if (event_type() == "Tau") {
+	if (lep_type == "Tau") {
 		lep_0 = & tau_0;
 		lep_0_p4 = tau_0_p4;
 		lep_0_q = & tau_0_q;
@@ -71,7 +85,7 @@ void MC_Analysis::ParticleSelection() {
 		n_leptons = n_taus; 
 	}
 	
-	if (event_type() == "ElectronMuon") {
+	if (lep_type == "ElectronMuon") {
 		if (elec_0_p4->Pt() > muon_0_p4->Pt()){
 			lep_0 = & elec_0;
 			lep_0_p4 = elec_0_p4;
@@ -88,16 +102,10 @@ void MC_Analysis::ParticleSelection() {
 			lep_1 = & elec_1;
 			lep_1_p4 = elec_1_p4;
 			lep_1_q = & elec_1_q;
-		}
-
-		if (n_muons == 1 && n_electrons == 1) {
-			n_leptons = n_muons + n_electrons;	
-		 } else {
-			n_leptons = 0;
-		}			
+		}		
 	}
 
-	if (event_type() == "ElectronTau") {
+	if (lep_type == "ElectronTau") {
 		if (elec_0_p4->Pt() > tau_0_p4->Pt()){
 			lep_0 = & elec_0;
 			lep_0_p4 = elec_0_p4;
@@ -115,15 +123,9 @@ void MC_Analysis::ParticleSelection() {
 			lep_1_p4 = elec_1_p4;
 			lep_1_q = & elec_1_q;
 		} 
-
-		if (n_taus == 1 && n_electrons == 1) {
-			n_leptons = n_taus + n_electrons;
-		} else {
-			n_leptons = 0;
-		}			
 	}
 
-	if (event_type() == "MuonTau") {
+	if (lep_type == "MuonTau") {
 		if (muon_0_p4->Pt() > tau_0_p4->Pt()){
 			lep_0 = & muon_0;
 			lep_0_p4 = muon_0_p4;
@@ -141,20 +143,14 @@ void MC_Analysis::ParticleSelection() {
 			lep_1_p4 = muon_1_p4;
 			lep_1_q = & muon_1_q;
 		} 
-
-		if (n_taus == 1 && n_muons == 1) {
-			n_leptons = n_taus + n_muons;
-		} else { 
-			n_leptons = 0;
-		}			
-	}
+	}	
 }
 
 // Checks an event is a lepton-antilepton pair
 bool MC_Analysis::event_pair_truth() {
 	bool event_pair=true;
 
-	if (event_type() == "Electron") {
+	if (lep_type == "Electron") {
 		if (elec_1 == 0) {
 			event_pair=false;
 		}
@@ -162,7 +158,7 @@ bool MC_Analysis::event_pair_truth() {
 			event_pair=false;			
 		}
 	}
-	if (event_type() == "Muon") {
+	if (lep_type == "Muon") {
 		if (muon_1 == 0) {
 			event_pair=false;
 		}
@@ -170,7 +166,7 @@ bool MC_Analysis::event_pair_truth() {
 			event_pair=false;			
 		}
 	}
-	if (event_type() == "Tau") {
+	if (lep_type == "Tau") {
 		if (tau_1 == 0) {
 			event_pair=false;
 		}
@@ -207,7 +203,7 @@ bool MC_Analysis::initial_cuts_truth() {
 	double ljet_0_pt = ljet_0_p4->Pt();
 	double ljet_1_pt = ljet_1_p4->Pt();
 	
-	if (event_type() == "Electron") {
+	if (lep_type == "Electron") {
 		if (cut_kin == true) {
 			if (elec_0_pt < cut_kin_E || elec_1_pt < cut_kin_E) {
 				passed_cuts=false;
@@ -219,7 +215,7 @@ bool MC_Analysis::initial_cuts_truth() {
 			}
 		}
 	}
-	if (event_type() == "Muon") {
+	if (lep_type == "Muon") {
 		if (cut_kin == true) {
 			if (muon_0_pt < cut_kin_E || muon_1_pt < cut_kin_E) {
 				passed_cuts=false;
@@ -231,7 +227,7 @@ bool MC_Analysis::initial_cuts_truth() {
 			}
 		}
 	}
-	if (event_type() == "Tau") {
+	if (lep_type == "Tau") {
 		if (cut_kin == true) {
 			if (tau_0_pt < cut_kin_E || tau_1_pt < cut_kin_E) {
 				passed_cuts=false;
@@ -268,11 +264,8 @@ bool MC_Analysis::initial_cuts_truth() {
 	}
 	
 
-
-
 	return passed_cuts;
 }
-
 
 
 # endif
