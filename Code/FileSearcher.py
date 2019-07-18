@@ -60,7 +60,21 @@ while found_dir == None:
 						# Remove duplicate processes found in higgs
 						if chain_name not in chain_names:
 							file_size = os.path.getsize(file_path)/1e9	# Gets the size of file in GB
-							print("%s		%.2f GB"%(chain_name,file_size))
+							file_exist = os.path.exists("OutputFiles/"+chain_name+".root")
+							if file_exist == True:
+								file_analysed = "Analysed"
+							else:
+								file_analysed = "Not Analysed"
+								
+							# Bodge to get nice columns (yeah ik it's dumb but it works)
+							if len(chain_name) < 8:
+								print("%s				%.2f GB		%s"%(chain_name,file_size,file_analysed))
+							elif len(chain_name)>=8 and len(chain_name) < 16:
+								print("%s			%.2f GB		%s"%(chain_name,file_size,file_analysed))
+							elif len(chain_name)>=16 and len(chain_name)<24:
+								print("%s		%.2f GB		%s"%(chain_name,file_size,file_analysed))
+							else:
+								print("%s	%.2f GB		%s"%(chain_name,file_size,file_analysed))
 							file_paths.append(file_path)
 							chain_names.append(chain_name)
 							file_sizes.append(file_size)
@@ -96,6 +110,8 @@ if run_analysis == True:
 
 	# ------ ANALYSIS ------ #
 	print("\nBegining analysis...")
+	print("Updating Histogram booking...")
+	os.system("python Auto_Histogram_Book.py")
 	
 	for i in range(len(file_paths)):
 		print("Analysing %s	%.2f GB, (%i/%i)"%(chain_names[i],file_sizes[i],i+1,len(file_paths)))
@@ -129,7 +145,7 @@ if run_analysis == True:
 
 		# Rename output file as the chain name and put into OutputFiles
 		if run_sum == True:
-			os.system("mv outfile.root OutputFiles/Sub-Processes/%s.root"%chain_names[i])
+			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 		if run_sum == False:
 			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 	
@@ -145,8 +161,8 @@ if run_sum == True:
 	
 	# Store the histograms from the first seciton of data in a list
 	totHist = []
-	sec0 = r.TFile("OutputFiles/Sub-Processes/%s.root"%chain_names[0])	# first file
-	key0 = sec0.GetListOfKeys()						# first list of keys
+	sec0 = r.TFile("OutputFiles/%s.root"%chain_names[0])	# first file
+	key0 = sec0.GetListOfKeys()				# first list of keys
 	for j in range(len(key0)):
 		totHist.append(sec0.Get(key0[j].GetName()))
 
@@ -154,7 +170,7 @@ if run_sum == True:
 	for i in range(1, len(chain_names)):
 
 		# Read in the output file for this seciton of data
-		secFile = r.TFile("OutputFiles/Sub-Processes/%s.root"%chain_names[i])
+		secFile = r.TFile("OutputFiles/%s.root"%chain_names[i])
 
 		# Get histogram keys
 		keys = secFile.GetListOfKeys()
