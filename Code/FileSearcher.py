@@ -22,7 +22,7 @@ found_dir = None	# Used to check whether a directory was found or not
 file_paths = []		# List of chosen file paths
 chain_names = []	# List of chosen file chain names
 file_sizes = []		# List of file sizes
-file_exist = []		# Lists chosen chain names with an associated truth to whether it is a sub-process or not (only if chaining)
+files_analysed = []	# List of whether files have been previously analysed or not
 
 while found_dir == None:
 	user_input = raw_input("Enter which specific process(es) you want to analyse: ")
@@ -78,6 +78,7 @@ while found_dir == None:
 							file_paths.append(file_path)
 							chain_names.append(chain_name)
 							file_sizes.append(file_size)
+							files_analysed.append(file_exist)
 										
 		if found_dir == False or found_dir == None:
 			print("I'm sorry, I couldn't find a matching simulation to %s!"%chains[i])
@@ -86,9 +87,10 @@ print("\nI found %i simulations\n"%len(file_paths))
 run_analysis = False
 run_sum = False
 run_stack = False
+run_new = False
 run_restart = False
-while run_analysis == False and run_sum == False and run_stack == False and run_restart == False:
-	print("Would you like to (a): Analyse these files\n (b): Sum these files       (c): Analyse, then sum these files\n (d): Stack these files     (e): Analyse, then stack these files\n (f): Restart?")
+while run_analysis == False and run_sum == False and run_stack == False and run_restart == False and run_new == False:
+	print("Would you like to\n (a): Analyse these files\n (b): Sum these files       (c): Analyse, then sum these files\n (d): Stack these files     (e): Analyse, then stack these files\n (f): Analyse files not previously analysed\n (g): Restart?")
 	run_choice = raw_input("Input: ").lower()
 	
 	if run_choice in ['a','c','e']:
@@ -102,9 +104,42 @@ while run_analysis == False and run_sum == False and run_stack == False and run_
 		#stack_name = stack_hist+'_stack'
 		#stack_title = raw_input("Title your stack: ")
 	if run_choice == 'f':
+		run_new = True
+	if run_choice == 'g':
 		run_restart = True
-	if run_choice not in ['a', 'b', 'c', 'd', 'e', 'f']:
-		print("Error: please type either option a, b, c, d, e or f")
+	if run_choice not in ['a', 'b', 'c', 'd', 'e', 'f', 'g']:
+		print("Error: please type either option a, b, c, d, e, f or g")
+
+if run_new == True:
+	popped=0
+	for i in range(len(files_analysed)):
+		if files_analysed[i]==True:	# If the file previously existed
+			file_paths.pop(i-popped)
+			chain_names.pop(i-popped)
+			file_sizes.pop(i-popped)
+			popped+=1
+	print("Comfirm analysis of these %i simulations: "%len(chain_names))
+	for i in range(len(chain_names)):
+	
+	# Bodge again
+		if len(chain_names[i]) < 8:
+			print("%s				%.2f GB"%(chain_names[i],file_sizes[i]))
+		elif len(chain_names[i])>=8 and len(chain_names[i]) < 16:
+			print("%s			%.2f GB"%(chain_names[i],file_sizes[i]))
+		elif len(chain_names[i])>=16 and len(chain_names[i])<24:
+			print("%s		%.2f GB"%(chain_names[i],file_sizes[i]))
+		else:
+			print("%s	%.2f GB	"%(chain_names[i],file_sizes[i]))
+	confirm_run = False
+	while confirm_run != True:
+		confirm_run = raw_input("y/n: ")
+		if confirm_run == 'y':
+			confirm_run = True
+			run_analysis=True
+		elif confirm_run == 'n':
+			confirm_run = True
+			run_analysis=False
+			run_restart=True
 		
 if run_analysis == True:
 
@@ -113,9 +148,11 @@ if run_analysis == True:
 	print("Updating Histogram booking...")
 	os.system("python Auto_Histogram_Book.py")
 	
+	
+	
 	for i in range(len(file_paths)):
 		print("Analysing %s	%.2f GB, (%i/%i)"%(chain_names[i],file_sizes[i],i+1,len(file_paths)))
-		
+	
 		with open("Headers/ChosenFile.h",'w') as ChoiceFile:
 			if run_sum == False:
 				ChoiceFile.write('choice = "%s";'%chain_names[i])
@@ -125,16 +162,15 @@ if run_analysis == True:
 
 		# Reset environment
 		r.gROOT.Reset()
-		
+	
 		# Load in macro
 		r.gROOT.SetBatch(True)	# Turn on batch mode so that any graphics are blocked from opening
 		r.gROOT.ProcessLine(".L MC_Analysis.C")
-		
+	
 		# Load in tree from file
 		r.gROOT.ProcessLine('TFile *file_%s = new TFile("%s")'%(chain_names[i],file_paths[i]))
 		r.gROOT.ProcessLine("TTree *tree_%s = new TTree"%chain_names[i])
-		r.gROOT.ProcessLine('file_%s->GetObject("NOMINAL",tree_%s)'%(chain_names[i],chain_names[i]))	# "NOMINAL" is the object got by the new tree from the file
-
+		r.gROOT.ProcessLine('file_%s->GetObject("NOMINAL",tree_%s)'%(chain_names[i],chain_names[i]))	# "NOMINAL" is the object got by the new tree from 																the file
 		if run_stack == True:
 			print("This has not been programmed yet!")
 
@@ -148,7 +184,7 @@ if run_analysis == True:
 			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 		if run_sum == False:
 			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
-	
+
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
 		if i == len(file_paths)-1 and run_sum == False: 
