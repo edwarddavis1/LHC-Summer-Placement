@@ -1,6 +1,7 @@
 import ROOT as r
-import os
+import os, time, stat
 from subprocess import PIPE,Popen
+import datetime
 
 # Gets the name of the host (the computer you are ssh'ing to)
 proc = Popen(['hostname'], stdout=PIPE)
@@ -23,10 +24,11 @@ file_paths = []		# List of chosen file paths
 chain_names = []	# List of chosen file chain names
 file_sizes = []		# List of file sizes
 files_analysed = []	# List of whether files have been previously analysed or not
+file_times = []		# List of times that simulations will take
+files_last_run = []	# List of dates when the file was last run
 
 while found_dir == None:
 	user_input = raw_input("Enter which specific process(es) you want to analyse: ")
-	#user_input = "Zee2jets"
 	user_input = user_input.replace(" ","")	# remove spaces	
 	chains = user_input.split(",")	# get list of chains from input
 	
@@ -50,6 +52,7 @@ while found_dir == None:
 				if chains[i] in dirname and dirname != MC_path:	# prevents the program grabbing the /mc directory
 					found_dir = True
 					for filenames in os.walk(dirname):
+					
 						# Writes out the full file path
 						filename = filenames[2][0]
 						file_path = dirname+"/"+filename
@@ -59,26 +62,41 @@ while found_dir == None:
 						
 						# Remove duplicate processes found in higgs
 						if chain_name not in chain_names:
-							file_size = os.path.getsize(file_path)/1e9	# Gets the size of file in GB
+						
+							# Gets the size of file in GB
+							file_size = os.path.getsize(file_path)/1e9	
+							
+							# Checks if file has been previously analysed
 							file_exist = os.path.exists("OutputFiles/"+chain_name+".root")
 							if file_exist == True:
 								file_analysed = "Analysed"
 							else:
 								file_analysed = "Not Analysed"
 								
-							# Bodge to get nice columns (yeah ik it's dumb but it works)
-							if len(chain_name) < 8:
-								print("%s				%.2f GB		%s"%(chain_name,file_size,file_analysed))
-							elif len(chain_name)>=8 and len(chain_name) < 16:
-								print("%s			%.2f GB		%s"%(chain_name,file_size,file_analysed))
-							elif len(chain_name)>=16 and len(chain_name)<24:
-								print("%s		%.2f GB		%s"%(chain_name,file_size,file_analysed))
-							else:
-								print("%s	%.2f GB		%s"%(chain_name,file_size,file_analysed))
+							# Estimates the time of the simulation
+							file_time=""
+							file_last_run=""
+							with open("ProcessTimes.txt", "r") as f:
+		    						lines = f.readlines()
+		    					for line in lines:
+		    						if chain_name in line:
+		    							file_time = line.split(':')[1].rstrip().split(" ")[0]		# get time
+		    							file_time = str(datetime.timedelta(seconds=int(file_time)))
+		    							file_time_s = file_time.split(':')[2].split(' ')[0]
+		    							file_time_min = file_time.split(':')[1]
+		    							file_time = "%s:%s"%(file_time_min,file_time_s)
+		    							
+		    							# get last run & remove \n
+		    							file_last_run = str(line.split(':')[2])+':'+str(line.split(':')[3].rstrip())	
+		    					
+							
+							# Format values into columns ({:30s} 30 spaces after first letter in string)
+							print('{:27s} {:.2f} GB	{:14} {:6} {}'.format(chain_name, file_size, file_analysed, file_time, file_last_run))
 							file_paths.append(file_path)
 							chain_names.append(chain_name)
 							file_sizes.append(file_size)
 							files_analysed.append(file_exist)
+							file_times.append(file_time)
 										
 		if found_dir == False or found_dir == None:
 			print("I'm sorry, I couldn't find a matching simulation to %s!"%chains[i])
@@ -120,16 +138,7 @@ if run_new == True:
 			popped+=1
 	print("Comfirm analysis of these %i simulations: "%len(chain_names))
 	for i in range(len(chain_names)):
-	
-	# Bodge again
-		if len(chain_names[i]) < 8:
-			print("%s				%.2f GB"%(chain_names[i],file_sizes[i]))
-		elif len(chain_names[i])>=8 and len(chain_names[i]) < 16:
-			print("%s			%.2f GB"%(chain_names[i],file_sizes[i]))
-		elif len(chain_names[i])>=16 and len(chain_names[i])<24:
-			print("%s		%.2f GB"%(chain_names[i],file_sizes[i]))
-		else:
-			print("%s	%.2f GB	"%(chain_names[i],file_sizes[i]))
+		print('{:27s} {:.2f} GB	{:14} {:6} s {}'.format(chain_names[i], file_sizes[i], files_analysed[i], file_times[i], files_last_run[i]))
 	confirm_run = False
 	while confirm_run != True:
 		confirm_run = raw_input("y/n: ")
@@ -148,17 +157,26 @@ if run_analysis == True:
 	print("Updating Histogram booking...")
 	os.system("python Auto_Histogram_Book.py")
 	
-	
-	
+		
 	for i in range(len(file_paths)):
 		print("Analysing %s	%.2f GB, (%i/%i)"%(chain_names[i],file_sizes[i],i+1,len(file_paths)))
-	
-		with open("Headers/ChosenFile.h",'w') as ChoiceFile:
-			if run_sum == False:
-				ChoiceFile.write('choice = "%s";'%chain_names[i])
-			else:
-				ChoiceFile.write('choice = "%s";'%sum_name)
-		ChoiceFile.close()
+
+		# Write the chain next to the elapsed time in text file
+		with open("ProcessTimes.txt", "r") as f:
+		    lines = f.readlines()
+		with open("ProcessTimes.txt", "w") as f:
+			for line in lines:
+				try:
+					int(line[0])					
+				except:
+					if chain_names[i] not in line:
+				   		 f.write(line)
+			f.write(chain_names[i]+':')
+		f.close()
+
+		# Date when last run
+		file_last_run=str(datetime.datetime.now().strftime("%m-%d %H:%M"))
+		files_last_run.append(file_last_run)
 
 		# Reset environment
 		r.gROOT.Reset()
@@ -184,13 +202,18 @@ if run_analysis == True:
 			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 		if run_sum == False:
 			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
+		
+		# Write when process last run	
+		with open("ProcessTimes.txt", "a") as f:
+			f.write(':'+files_last_run[i]+"\n")
+		f.close()
 
 		if i != len(file_paths)-1:
 			r.gROOT.ProcessLine(".q")
 		if i == len(file_paths)-1 and run_sum == False: 
 			r.gROOT.SetBatch(False)	# Turn batch mode off so that TBrowser can start after analysis
-			r.gROOT.ProcessLine("new TBrowser")
-			os.system("root -l")
+			#r.gROOT.ProcessLine("new TBrowser")
+			#os.system("root -l")
 			
 if run_sum == True:
 	print("\nSumming Histograms...")
@@ -222,8 +245,8 @@ if run_sum == True:
 		totFile.Close()
 		
 	print("Sum %s Complete!"%chains[0])
-	r.gROOT.ProcessLine("new TBrowser")
-	os.system("root -l")
+	#r.gROOT.ProcessLine("new TBrowser")
+	#os.system("root -l")
 
 if run_restart == True:
 	print("\nAnalysis aborted...Restarting...\n")
