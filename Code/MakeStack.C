@@ -1,7 +1,11 @@
 #define MakeStack_cxx
 #include "Headers/MC_Analysis.h"
 
-
+template<int N>
+int ListLength(TString (&list)[N]) {
+	int length = sizeof(list)/sizeof(list[0]);
+	return length;
+}
 
 void AddStack(TString c_name, TString get_hist, TString files[], int file_length, string MC_type, bool norm_hist=false) {
 	TCanvas *c = new TCanvas(c_name);
@@ -9,6 +13,7 @@ void AddStack(TString c_name, TString get_hist, TString files[], int file_length
 	auto legend = new TLegend(0.75,0.7,0.99,0.99);
 	TString leg_title;
 	
+	//cout << ListLength(files) << endl;
 	for (UInt_t i=0;i<file_length;i++){
 		TFile* file = new TFile("OutputFiles/"+files[i]+".root");
 		TH1F* h = (TH1F*)file->Get(get_hist);
@@ -60,8 +65,8 @@ void MakeStack() {
 			
 	bool norm_hist=true;
 	
-	
-	//AddStack("delta_R_ljet_Zmm_CVetBFil_NoCut","ljet_delta_R_NoCut",Zmm_CVetBFil,5,"Zmm");
+	//cout << ListLength(Zmm_BFil) << endl;
+	AddStack("delta_R_ljet_Zmm_CVetBFil_NoCut","ljet_delta_R_NoCut",Zmm_CVetBFil,ListLength(Zmm_BFil),"Zmm");
 	//AddStack("delta_R_lep_Zmm_CVetBFil","lep_delta_R",Zmm_CVetBFil,5,"Zmm");
 	//AddStack("delta_R_lep_Zmm_CVetBFil_NoCut","lep_delta_R_NoCut",Zmm_CVetBFil,5,"Zmm");
 	
