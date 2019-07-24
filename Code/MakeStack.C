@@ -121,12 +121,17 @@ void MakeStack() {
 	TString Zee_CFilBVet[]={"Zee2jets_Min_N_TChannel","Zee_MV0_70_CFilBVet","Zee_MV70_140_CFilBVet","Zee_MV140_280_CFilBVet","Zee_MV280_500_CFilBVet"};
 			
 	bool norm_hist=true;
+	//PlotSameAxes("Zmm2jets_Min_N_TChannel","ljet_0_pt","ljet_1_pt","Zmm","Zmm2jets","L vs SL ljet pt 2jets");
+	//PlotSameAxes("Zmm2jets_Min_N_TChannel","ljet_0_eta","ljet_1_eta","Zmm","Zmm2jets","L vs SL ljet eta 2jets");
+	//PlotSameAxes("Zmm2jets_Min_N_TChannel","lep_0_eta","lep_1_eta","Zmm","Zmm2jets","L vs SL lep eta 2jets");
+	//PlotSameAxes("Zmumu_MV280_500_CFilBVet","ljet_0_pt","ljet_1_pt","Zmm","Zmumu","L vs SL ljet pt");
+	//PlotSameAxes("Zmumu_MV280_500_CFilBVet","ljet_0_eta","ljet_1_eta","Zmm","Zmumu","L vs SL ljet eta");
+	//PlotSameAxes("Zmumu_MV280_500_CFilBVet","lep_0_eta","lep_1_eta","Zmm","Zmumu","L vs SL lep eta");
 	
-	PlotSameAxes("Zmm2jets_Min_N_TChannel","lep_eta","lep_rapidity","Zmm","Zmm2jets","Eta vs Rap");
-	
-	
-	
-	//AddStack("delta_R_lep_Zmm_CVetBFil","lep_delta_R",Zmm_CFilBVet,5,"Zmm");
+	//AddStack("ljet_delta_eta","ljet_delta_eta",Zee_CFilBVet,5,"Zee");
+	//AddStack("ljet_eta","ljet_0_eta",Zee_CFilBVet,5,"Zee");
+	//AddStack("lep_delta_eta","lep_delta_eta",Zee_CFilBVet,5,"Zee");
+	//AddStack("lep_eta","lep_eta",Zee_CFilBVet,5,"Zee");
 	//AddStack("delta_R_rap_lep_Zmm_CVetBFil","lep_delta_R_rap",Zmm_CFilBVet,5,"Zmm");
 	//AddStack("delta_eta_lep_Zmm_CVetBFil","lep_delta_eta",Zmm_CVetBFil,5,"Zmm");
 	//AddStack("delta_phi_lep_Zmm_CVetBFil","lep_delta_phi",Zmm_CVetBFil,5,"Zmm");
