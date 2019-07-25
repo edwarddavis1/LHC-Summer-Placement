@@ -1,7 +1,7 @@
 #define MakeStack_cxx
 #include "Headers/MC_Analysis.h"
-
-
+#include <iostream>
+#include "vector"
 
 void AddStack(TString c_name, TString get_hist, TString files[], int file_length, string MC_type, bool norm_hist=false) {
 	TCanvas *c = new TCanvas(c_name);
@@ -104,6 +104,47 @@ void PlotSameAxes(TString file_name,TString hist1, TString hist2, string MC_type
 	outfile.Close();	
 }
 
+void PlotSameAxes2(TString file_name, TString hists[], int hists_len, string MC_type, TString legend_title, TString c_name) {
+	TCanvas *c = new TCanvas(c_name);
+	TFile* file = new TFile("OutputFiles/"+file_name+".root");
+	auto legend = new TLegend(0.75,0.7,0.99,0.99);
+	
+	
+	float temp_min=0, temp_max=0;	
+	for (UInt_t i=0; i<hists_len; i++) {
+		TH1F* h = (TH1F*)file->Get(hists[i]);
+		cout << "Collecting maxima" << endl;
+		cout << h->GetMaximum() << endl;
+		if (i==0) {
+			temp_min = h->GetMinimum();
+			temp_max = h->GetMaximum();
+		}
+		else {
+			if (temp_min > h->GetMinimum()) temp_min = h->GetMinimum();
+			if (temp_max < h->GetMaximum()) temp_max = h->GetMaximum();
+		}
+	}
+	cout << temp_min << "	" << temp_max << endl;
+	
+	for (UInt_t i=0; i<hists_len; i++) {
+		TH1F* h = (TH1F*)file->Get(hists[i]);
+		h->SetFillColor(i+6);
+		h->SetFillStyle(3001);
+		legend->AddEntry(h,hists[i],"f");
+		if (i==0) {
+			h->Draw();
+			h->SetMaximum(temp_max);
+			h->SetMinimum(temp_min);
+		}
+		else h->Draw("same");
+	}
+	
+	legend->SetHeader(legend_title,"C");
+	legend->SetTextSize(0.02);
+	legend->Draw();
+
+}
+
 void MakeStack() {
 	//gROOT->SetBatch(kTRUE);
 	cout << "Making stacks..." << endl;
@@ -121,12 +162,11 @@ void MakeStack() {
 	TString Zee_CFilBVet[]={"Zee2jets_Min_N_TChannel","Zee_MV0_70_CFilBVet","Zee_MV70_140_CFilBVet","Zee_MV140_280_CFilBVet","Zee_MV280_500_CFilBVet"};
 			
 	bool norm_hist=true;
-	//PlotSameAxes("Zmm2jets_Min_N_TChannel","ljet_0_pt","ljet_1_pt","Zmm","Zmm2jets","L vs SL ljet pt 2jets");
-	//PlotSameAxes("Zmm2jets_Min_N_TChannel","ljet_0_eta","ljet_1_eta","Zmm","Zmm2jets","L vs SL ljet eta 2jets");
-	//PlotSameAxes("Zmm2jets_Min_N_TChannel","lep_0_eta","lep_1_eta","Zmm","Zmm2jets","L vs SL lep eta 2jets");
-	//PlotSameAxes("Zmumu_MV280_500_CFilBVet","ljet_0_pt","ljet_1_pt","Zmm","Zmumu","L vs SL ljet pt");
-	//PlotSameAxes("Zmumu_MV280_500_CFilBVet","ljet_0_eta","ljet_1_eta","Zmm","Zmumu","L vs SL ljet eta");
-	//PlotSameAxes("Zmumu_MV280_500_CFilBVet","lep_0_eta","lep_1_eta","Zmm","Zmumu","L vs SL lep eta");
+	
+	TString hists[] = {"ljet_0_eta","ljet_1_eta","ljet_2_eta", "ljet_3_eta"};
+	PlotSameAxes2("Zmm2jets_Min_N_TChannel",hists,4,"Zmm","L vs SL ljet eta","Zmumu");
+	
+	//PlotSameAxes("Zmumu_MV280_500_CFilBVet","ljet_0_pt","ljet_1_pt","Zmm","Zmumu2","L vs SL lep eta");
 	
 	//AddStack("ljet_delta_eta","ljet_delta_eta",Zee_CFilBVet,5,"Zee");
 	//AddStack("ljet_eta","ljet_0_eta",Zee_CFilBVet,5,"Zee");
