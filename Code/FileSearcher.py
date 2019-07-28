@@ -3,6 +3,8 @@ import os, time, stat
 from subprocess import PIPE,Popen
 import datetime
 
+# Did this on laptop 
+
 # Gets the name of the host (the computer you are ssh'ing to)
 proc = Popen(['hostname'], stdout=PIPE)
 host_full = proc.communicate()[0].split()[0]
@@ -26,6 +28,8 @@ file_sizes = []		# List of file sizes
 files_analysed = []	# List of whether files have been previously analysed or not
 file_times = []		# List of times that simulations will take
 files_last_run = []	# List of dates when the file was last run
+second_substring = []	# Used to store a secondary sub-string (if substring has '&' in it)
+file_time_total_s=0 	# Calculates the time for available simulations
 
 while found_dir == None:
 	user_input = raw_input("Enter which specific process(es) you want to analyse: ")
@@ -36,6 +40,7 @@ while found_dir == None:
 	for i in range(len(chains)):
 		if chains[i] == "Ztt":
 			chains[i] = "Ztt_"
+		
 	
 	print("Here's what I found:\n")
 
@@ -73,35 +78,37 @@ while found_dir == None:
 							else:
 								file_analysed = "Not Analysed"
 								
-							# Estimates the time of the simulation
+							# Reads previous simulation times
 							file_time=""
 							file_last_run=""
-							with open("ProcessTimes.txt", "r") as f:
-		    						lines = f.readlines()
-		    					for line in lines:
-		    						if chain_name in line:
-		    							file_time = line.split(':')[1].rstrip().split(" ")[0]		# get time
-		    							file_time = str(datetime.timedelta(seconds=int(file_time)))
-		    							file_time_s = file_time.split(':')[2].split(' ')[0]
-		    							file_time_min = file_time.split(':')[1]
-		    							file_time = "%s:%s"%(file_time_min,file_time_s)
+							for line in reversed(list(open("ProcessTimes.txt"))):
+		    						if chain_name in line and str.isdigit(line.split(':')[0])==True:
+		    							file_time_m = line.split(':')[0]
+		    							file_time_s = line.split(':')[1]
+		    							file_time_total_s += int(file_time_s) + int(file_time_m)*60
+		    							if file_time_m == '0':
+		    								file_time = "%s sec"%file_time_s
+		    							else:
+		    								file_time = "%s min %s sec"%(file_time_m,file_time_s)
 		    							
-		    							# get last run & remove \n
-		    							file_last_run = str(line.split(':')[2])+':'+str(line.split(':')[3].rstrip())	
-		    					
+		    							file_last_run = str(line.split(':')[3])+':'+str(line.split(':')[4].rstrip())	
+		    							break
 							
 							# Format values into columns ({:30s} 30 spaces after first letter in string)
-							print('{:27s} {:.2f} GB	{:14} {:6} {}'.format(chain_name, file_size, file_analysed, file_time, file_last_run))
+							print('{:27s} {:.2f} GB	{:13} {:13} {}'.format(chain_name, file_size, file_analysed, file_time, 													file_last_run))
 							file_paths.append(file_path)
 							chain_names.append(chain_name)
 							file_sizes.append(file_size)
 							files_analysed.append(file_exist)
 							file_times.append(file_time)
+							
 										
 		if found_dir == False or found_dir == None:
 			print("I'm sorry, I couldn't find a matching simulation to %s!"%chains[i])
 
-print("\nI found %i simulations\n"%len(file_paths))
+file_time_total_m = int(round(file_time_total_s / 60))
+file_time_total_s = file_time_total_s - file_time_total_m*60
+print("\nI found %i simulations, total time: %i min %i sec\n"%(len(file_paths),file_time_total_m,file_time_total_s))
 run_analysis = False
 run_sum = False
 run_stack = False
@@ -159,25 +166,12 @@ if run_analysis == True:
 	
 		
 	for i in range(len(file_paths)):
-		print("Analysing %s	%.2f GB, (%i/%i)"%(chain_names[i],file_sizes[i],i+1,len(file_paths)))
-
-		# Write the chain next to the elapsed time in text file
-		with open("ProcessTimes.txt", "r") as f:
-		    lines = f.readlines()
-		with open("ProcessTimes.txt", "w") as f:
-			for line in lines:
-				try:
-					int(line[0])					
-				except:
-					if chain_names[i] not in line:
-				   		 f.write(line)
-			f.write(chain_names[i]+':')
-		f.close()
+		print("Analysing {}	{}, ({}/{})".format(chain_names[i],file_times[i],i+1,len(file_paths)))
 
 		# Date when last run
 		file_last_run=str(datetime.datetime.now().strftime("%m-%d %H:%M"))
 		files_last_run.append(file_last_run)
-
+		
 		# Reset environment
 		r.gROOT.Reset()
 	
@@ -202,10 +196,21 @@ if run_analysis == True:
 			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
 		if run_sum == False:
 			os.system("mv outfile.root OutputFiles/%s.root"%chain_names[i])
-		
+			
+		# 0:511:671:951:900:33 times for CFilBVet
 		# Write when process last run	
+		with open("ProcessTimes.txt", "r") as f:
+		    lines = f.readlines()
 		with open("ProcessTimes.txt", "a") as f:
-			f.write(':'+files_last_run[i]+"\n")
+			for line in lines:
+				failed_run = False 	# If a run fails, stops program writing info to the .txt file
+				try:
+					line.split(':')[1]
+				except:
+					failed_run = True
+			if failed_run == False:
+				f.write(':'+chain_names[i])
+				f.write(':'+files_last_run[i]+"\n")
 		f.close()
 
 		if i != len(file_paths)-1:
@@ -245,8 +250,8 @@ if run_sum == True:
 		totFile.Close()
 		
 	print("Sum %s Complete!"%chains[0])
-	#r.gROOT.ProcessLine("new TBrowser")
-	#os.system("root -l")
+	r.gROOT.ProcessLine("new TBrowser")
+	os.system("root -l")
 
 if run_restart == True:
 	print("\nAnalysis aborted...Restarting...\n")

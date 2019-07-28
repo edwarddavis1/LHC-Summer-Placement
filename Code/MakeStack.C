@@ -70,40 +70,47 @@ void StackCuts(TString c_name, TString get_hists[], TString file_name, int hists
 	outfile.Close();
 }
 
-void PlotSameAxes(TString file_name, TString hists[], int hists_len, string MC_type, TString legend_title) {
+
+void PlotSameAxes(TString file_names[],int files_len, TString hists[], int hists_len, string MC_type, TString legend_title) {
 	TCanvas *c = new TCanvas(legend_title);
-	TFile* file = new TFile("OutputFiles/"+file_name+".root");
 	auto legend = new TLegend(0.75,0.7,0.99,0.99);
 	
 	
-	float temp_min=0, temp_max=0;	
-	for (UInt_t i=0; i<hists_len; i++) {
-		TH1F* h = (TH1F*)file->Get(hists[i]);
-		if (i==0) {
-			temp_min = h->GetMinimum();
-			temp_max = h->GetMaximum();
-		}
-		else {
-			if (temp_min > h->GetMinimum()) temp_min = h->GetMinimum();
-			if (temp_max < h->GetMaximum()) temp_max = h->GetMaximum();
+	float temp_min=0, temp_max=0;
+	for (UInt_t j=0; j<files_len; j++) {
+		TFile* file = new TFile("OutputFiles/"+file_names[j]+".root");	
+		for (UInt_t i=0; i<hists_len; i++) {
+			TH1F* h = (TH1F*)file->Get(hists[i]);
+			if ((i==0) && (j==0)) {
+				temp_min = h->GetMinimum();
+				temp_max = h->GetMaximum();
+			}
+			else {
+				if (temp_min > h->GetMinimum()) temp_min = h->GetMinimum();
+				if (temp_max < h->GetMaximum()) temp_max = h->GetMaximum();
+			}
 		}
 	}
-	
-	for (UInt_t i=0; i<hists_len; i++) {
-		TH1F* h = (TH1F*)file->Get(hists[i]);
-		h->SetFillColor(i+6);
-		h->SetFillStyle(3001);
-		legend->AddEntry(h,hists[i],"f");
-		if (i==0) {
-			h->Draw();
-			h->SetMaximum(temp_max);
-			h->SetMinimum(temp_min);
+	int colour = 6;
+	for (UInt_t j=0; j<files_len; j++) {
+		TFile* file = new TFile("OutputFiles/"+file_names[j]+".root");
+		for (UInt_t i=0; i<hists_len; i++) {
+			TH1F* h = (TH1F*)file->Get(hists[i]);
+			h->SetFillColor(colour);
+			colour += 1;
+			h->SetFillStyle(3001);
+			legend->AddEntry(h,file_names[j]+hists[i],"f");
+			cout << "Drawing " << file_names[j] << endl;
+			if ((i==0) && (j==0)) {
+				h->Draw();
+				h->SetMaximum(1.2*temp_max);
+				h->SetMinimum(temp_min);
+			}
+			else h->Draw("same");
 		}
-		else h->Draw("same");
 	}
-	
 	legend->SetHeader(legend_title,"C");
-	legend->SetTextSize(0.02);
+	legend->SetTextSize(0.015);
 	legend->Draw();
 	
 	TFile outfile(TString::Format("OutputFiles/SameAxes_%s.root",MC_type.c_str()),"UPDATE");
@@ -133,22 +140,14 @@ void MakeStack() {
 	TString ljet_pt[] = {"ljet_0_pt","ljet_1_pt","ljet_2_pt", "ljet_3_pt"};
 	TString ljet_eta[] = {"ljet_0_eta","ljet_1_eta","ljet_2_eta","ljet_3_eta"};
 	TString ljet_phi[] = {"ljet_0_phi","ljet_1_phi","ljet_2_phi","ljet_3_phi"};
-	/*
-	PlotSameAxes("Zmm2jets_Min_N_TChannel",ljet_pt,4,"Zmm","Zmm2jets_ljet_pt");
-	PlotSameAxes("Zmumu_MV280_500_CFilBVet",ljet_pt,4,"Zmm","Zmumu_MV280_500_CFilBVet_ljet_pt");
-	PlotSameAxes("Zmumu_MV70_140_CFilBVet",ljet_pt,4,"Zmm","Zmumu_MV70_140_CFilBVet_ljet_pt");
-	PlotSameAxes("Zmumu_MV140_280_CFilBVet",ljet_pt,4,"Zmm","Zmumu_M140_280_CFilBVet_ljet_pt");
 	
-	PlotSameAxes("Zmm2jets_Min_N_TChannel",ljet_eta,4,"Zmm","Zmm2jets_ljet_eta");
-	PlotSameAxes("Zmumu_MV280_500_CFilBVet",ljet_eta,4,"Zmm","Zmumu_MV280_500_CFilBVet_ljet_eta");
-	PlotSameAxes("Zmumu_MV70_140_CFilBVet",ljet_eta,4,"Zmm","Zmumu_MV70_140_CFilBVet_ljet_eta");
-	PlotSameAxes("Zmumu_MV140_280_CFilBVet",ljet_eta,4,"Zmm","Zmumu_M140_280_CFilBVet_ljet_eta");
-	*/
-	PlotSameAxes("Zmm2jets_Min_N_TChannel",ljet_phi,4,"Zmm","Zmm2jets_ljet_phi");
-	PlotSameAxes("Zmumu_MV280_500_CFilBVet",ljet_phi,4,"Zmm","Zmumu_MV280_500_CFilBVet_ljet_phi");
-	PlotSameAxes("Zmumu_MV70_140_CFilBVet",ljet_phi,4,"Zmm","Zmumu_MV70_140_CFilBVet_ljet_phi");
-	PlotSameAxes("Zmumu_MV140_280_CFilBVet",ljet_phi,4,"Zmm","Zmumu_M140_280_CFilBVet_ljet_phi");
+	TString ljet_test[] = {"ljet_0_eta","ljet_0_phi"};
 	
+	TString jets_280[] = {"Zmm2jets_Min_N_TChannel","Zmumu_MV280_500_CFilBVet", "Zmumu_MV140_280_CFilBVet"};
+	
+	PlotSameAxes(jets_280,3,ljet_test,2,"Zmm", "jets_280_ljet_pt");
+
+
 	cout << "Stacks made!" << endl;
 	gROOT->SetBatch(kFALSE);
 }
