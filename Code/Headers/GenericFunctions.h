@@ -1,9 +1,8 @@
 #ifndef Generic_Functions_h
 #define Generic_Functions_h
 
-// Calculates the invariant mass of two 4-vectors
 double InvariantMass(TLorentzVector *Vector1, TLorentzVector *Vector2) {
-	
+
 	double inv_mass = (*Vector1 + *Vector2).M();
 	return inv_mass;
 }
@@ -12,19 +11,44 @@ void MC_Analysis::print_variable() {
 	cout << "elec_0_pt from func def: " << elec_0_p4->Pt() << endl;
 }
 
-// Calculates Centrality for Z boson
-double Centrality(TLorentzVector *Vector1, TLorentzVector *Vector2, TLorentzVector *Vector3, TLorentzVector *Vector4) {
-	
-	double Z_rapidity = ((*Vector1)+(*Vector2)).Rapidity(); // Z boson rapidity using muon 4 vectors
-	double j1_rapidity = Vector3->Eta();// jet 1 rapidity
-	double j2_rapidity = Vector4->Eta();// jet 2 rapidity	
+double Centrality(TLorentzVector *Vector1, TLorentzVector *Vector2,
+					TLorentzVector *Vector3, TLorentzVector *Vector4) {
 
-	double sum1 = Z_rapidity - (j1_rapidity + j2_rapidity)/2; // sum 1 to break things up
+	double Z_rapidity = ((*Vector1)+(*Vector2)).Rapidity();
+	double j1_rapidity = Vector3->Eta();
+	double j2_rapidity = Vector4->Eta();
+
+	double sum1 = Z_rapidity - (j1_rapidity + j2_rapidity)/2;
 	double Centrality = 2 * sum1/(Vector1->Rapidity() - Vector2->Rapidity());
 	return Centrality;
 }
 
-// Works out what type of event is occuring
+
+double PtBalance(TLorentzVector *lep_0_Vector, TLorentzVector *lep_1_Vector,
+				TLorentzVector *jet_0_Vector, TLorentzVector *jet_1_Vector) {
+	double lep_0_pt = lep_0_Vector->Pt();
+	double lep_1_pt = lep_1_Vector->Pt();
+	double jet_0_pt = jet_0_Vector->Pt();
+	double jet_1_pt = jet_1_Vector->Pt();
+	double pt_sum_mod = abs(lep_0_pt + lep_1_pt + jet_0_pt + jet_1_pt);
+
+	double pt_mod_sum = ((*lep_0_Vector) + (*lep_1_Vector) + (*jet_0_Vector)
+	 					+ (*jet_1_Vector)).Pt();
+
+	double pt_balance = pt_sum_mod / pt_mod_sum;
+
+	return pt_balance;
+}
+
+// calculates angular separation
+double DeltaR(TLorentzVector *Vector1, TLorentzVector *Vector2){
+	double delta_eta = Vector1->Eta() - Vector2->Eta();
+	double delta_phi = Vector1->Phi() - Vector2->Phi();
+	double delta_R = sqrt(pow(delta_eta,2) + pow(delta_phi,2));
+	return delta_R;
+}
+
+// works out what type of event is occuring
 void MC_Analysis::event_type() {
 
 	if (elec_0 > 0 && muon_0 == 0 && tau_0 == 0) {
@@ -58,9 +82,9 @@ void MC_Analysis::ParticleSelection() {
 		lep_1_p4 = elec_1_p4;
 		lep_1_q = & elec_1_q;
 
-		n_leptons = n_electrons; 
+		n_leptons = n_electrons;
 	}
-		
+
 	if (lep_type == "Muon") {
 		lep_0 = & muon_0;
 		lep_0_p4 = muon_0_p4;
@@ -70,7 +94,7 @@ void MC_Analysis::ParticleSelection() {
 		lep_1_p4 = muon_1_p4;
 		lep_1_q = & muon_1_q;
 
-		n_leptons = n_muons; 
+		n_leptons = n_muons;
 	}
 
 	if (lep_type == "Tau") {
@@ -82,9 +106,9 @@ void MC_Analysis::ParticleSelection() {
 		lep_1_p4 = tau_1_p4;
 		lep_1_q = & tau_1_q;
 
-		n_leptons = n_taus; 
+		n_leptons = n_taus;
 	}
-	
+
 	if (lep_type == "ElectronMuon") {
 		if (elec_0_p4->Pt() > muon_0_p4->Pt()){
 			lep_0 = & elec_0;
@@ -102,7 +126,7 @@ void MC_Analysis::ParticleSelection() {
 			lep_1 = & elec_1;
 			lep_1_p4 = elec_1_p4;
 			lep_1_q = & elec_1_q;
-		}		
+		}
 	}
 
 	if (lep_type == "ElectronTau") {
@@ -122,7 +146,7 @@ void MC_Analysis::ParticleSelection() {
 			lep_1 = & elec_1;
 			lep_1_p4 = elec_1_p4;
 			lep_1_q = & elec_1_q;
-		} 
+		}
 	}
 
 	if (lep_type == "MuonTau") {
@@ -142,11 +166,11 @@ void MC_Analysis::ParticleSelection() {
 			lep_1 = & muon_1;
 			lep_1_p4 = muon_1_p4;
 			lep_1_q = & muon_1_q;
-		} 
-	}	
+		}
+	}
 }
 
-// Checks an event is a lepton-antilepton pair
+// Checks an event is a lepton-antilepton pair & at least two jets
 bool MC_Analysis::event_pair_truth() {
 	bool event_pair=true;
 
@@ -155,7 +179,7 @@ bool MC_Analysis::event_pair_truth() {
 			event_pair=false;
 		}
 		if (elec_0_q == elec_1_q) {
-			event_pair=false;			
+			event_pair=false;
 		}
 	}
 	if (lep_type == "Muon") {
@@ -163,7 +187,7 @@ bool MC_Analysis::event_pair_truth() {
 			event_pair=false;
 		}
 		if (muon_0_q == muon_1_q) {
-			event_pair=false;			
+			event_pair=false;
 		}
 	}
 	if (lep_type == "Tau") {
@@ -171,28 +195,59 @@ bool MC_Analysis::event_pair_truth() {
 			event_pair=false;
 		}
 		if (tau_0_q == tau_1_q) {
-			event_pair=false;			
+			event_pair=false;
 		}
 	}
+	if (n_jets < 2) {
+		event_pair=false;
+	}
 
-	return event_pair;	
+	return event_pair;
 }
 
-// Finds out if an event meets initial selection cut criteria 
+//If Vector 3 or 4 lies between Vector 1 and Vector 2, with pT greater than 25GeV
+bool RapidityIntervalCheck(TLorentzVector *Vector1, TLorentzVector *Vector2, TLorentzVector *Vector3, TLorentzVector *Vector4) {
+
+	bool rap_int_condition = true;
+
+	//No additional jets with p_T > 25 GeV in rapidity interval between two leading jets
+	//First, need to find which leading jet is max and min and assign them these names
+	//Define the variables outside
+	double maxjet;
+	double minjet;
+
+	if (Vector1->Rapidity() > Vector2->Rapidity()) { // if ljet_0 is greater than ljet_1, assign it as max
+		maxjet = Vector1->Rapidity();
+		minjet = Vector2->Rapidity();
+	} else { // if it is smaller, assign it as the min
+		minjet = Vector1->Rapidity();
+		maxjet = Vector2->Rapidity();
+	}
+
+	// if additional jet_2 or jet_3 is between this rapidity interval, and have pT > 25, cut
+	if (minjet <= Vector3->Rapidity() && Vector3->Rapidity() <= maxjet && Vector3->Pt() > 25) rap_int_condition = false;
+	if (minjet <= Vector4->Rapidity() && Vector4->Rapidity() <= maxjet && Vector4->Pt() > 25) rap_int_condition = false;
+
+	return rap_int_condition;
+
+}
+
+// Finds out if an event meets initial selection cut criteria
 bool MC_Analysis::initial_cuts_truth() {
 	bool passed_cuts=true;
 
-	bool cut_kin=true;		// Kinematic Acceptance Cut pT <cut_kin_E GeV (NOTE will not have any effect on MC simulations)
-	double cut_kin_E = 25;		
-	bool cut_bjets=true;		// Removes events containing b meson jets
-	bool cut_2jets=true;		// Check that events have at least two jets
-	bool cut_jets_pt=true;		// Cuts leading jet at 55 GeV and sub-leading jet at 45 GeV (light jets)
+	// SELECTION CUTS // (Work to isolate VBF)
+
+	bool cut_kin=true;			// Kinematic Acceptance Cut pT <cut_kin_E GeV (NOTE will not have any effect on MC simulations)
+	double cut_kin_E = 25;
+	bool cut_bjets=true;			// Removes events containing b meson jets
+	bool cut_jets_pt=true;			// Cuts leading jet at 55 GeV and sub-leading jet at 45 GeV (light jets)
 	double cut_jets_L_pt = 55;
 	double cut_jets_SL_pt = 45;
-	bool cut_jet_inv_mass=true;	// Invariant mass of leading jets > 250 GeV
+	bool cut_jet_inv_mass=true;		// Invariant mass of leading jets > 250 GeV
 	double cut_jet_inv_mass_E = 250;
-	bool cut_inv_mass_min=true;	// Invariant mass > 40 GeV
-	double cut_inv_mass_min_E = 40; 
+	bool cut_inv_mass_min=true;		// Invariant mass > 40 GeV
+	double cut_inv_mass_min_E = 40;
 
 	double elec_0_pt = elec_0_p4->Pt();
 	double elec_1_pt = elec_1_p4->Pt();
@@ -202,13 +257,13 @@ bool MC_Analysis::initial_cuts_truth() {
 	double tau_1_pt = tau_1_p4->Pt();
 	double ljet_0_pt = ljet_0_p4->Pt();
 	double ljet_1_pt = ljet_1_p4->Pt();
-	
+
 	if (lep_type == "Electron") {
 		if (cut_kin == true) {
 			if (elec_0_pt < cut_kin_E || elec_1_pt < cut_kin_E) {
 				passed_cuts=false;
 			}
-		}	
+		}
 		if (cut_inv_mass_min == true) {
 			if (InvariantMass(elec_0_p4, elec_1_p4) < cut_inv_mass_min_E) {
 				passed_cuts=false;
@@ -244,11 +299,6 @@ bool MC_Analysis::initial_cuts_truth() {
 			passed_cuts=false;
 		}
 	}
-	if (cut_2jets == true) {
-		if (n_jets < 2) {
-			passed_cuts=false;
-		}
-	}
 	if (cut_jets_pt == true) {
 		if (ljet_0_pt < cut_jets_L_pt) {
 			passed_cuts=false;
@@ -262,10 +312,11 @@ bool MC_Analysis::initial_cuts_truth() {
 			passed_cuts=false;
 		}
 	}
-	
+
 
 	return passed_cuts;
 }
+
 
 
 # endif
