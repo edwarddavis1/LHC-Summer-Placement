@@ -1,7 +1,5 @@
 import ROOT as r
 import os
-import time
-import stat
 from subprocess import PIPE, Popen
 import datetime
 
@@ -13,7 +11,8 @@ print("Getting data from computer: %s..." % host)
 
 if host == "higgs":
     MC_path = "/higgs-data3/sam/forTomRyunAliceLuca/v03/mc"
-    chain_start = 6			# Amount of '.' before chain name
+    # amount of '.' before chain name
+    chain_start = 6
 elif host == "pc2014":
     MC_path = "/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc"
     chain_start = 7
@@ -31,11 +30,11 @@ files_last_run = []
 second_substring = []
 file_time_total_s = 0
 
-while found_dir == None:
-    user_input = raw_input(
-        "Enter which specific process(es) you want to analyse: ")
-    user_input = user_input.replace(" ", "")  # remove spaces
-    chains = user_input.split(",")  # get list of chains from input
+while found_dir is None:
+    user_input = raw_input("Enter which specific process(es) you want "
+                           "to analyse: ")
+    user_input = user_input.replace(" ", "")
+    chains = user_input.split(",")
 
     # Prevent bug where by typing "Ztt" all the files get chosen
     # (/mc directory contains the sub-string "Ztt")
@@ -48,7 +47,7 @@ while found_dir == None:
     # Searches the MC directory for sub-directories containing strings of
     # what the user entered
     for i in range(len(chains)):
-        if found_dir == None:
+        if found_dir is None:
             found_dir = None
         else:
             found_dir = False
@@ -106,7 +105,7 @@ while found_dir == None:
                         files_analysed.append(file_exist)
                         file_times.append(file_time)
 
-        if found_dir is False or found_dir == None:
+        if found_dir is False or found_dir is None:
             print("I'm sorry, I couldn't find a matching simulation to %s!" %
                   chains[i])
 
@@ -121,7 +120,7 @@ run_stack = False
 run_new = False
 run_restart = False
 while (run_analysis is False and run_sum is False and run_stack is False and
-       run_restart is False and run_new is False):
+        run_restart is False and run_new is False):
     print("Would you like to\n (a): Analyse these files\n "
           "(b): Sum these files       (c): Analyse, then sum these files\n"
           " (d): Analyse files not previously analysed\n (e): Restart?")
@@ -154,7 +153,7 @@ if run_new is True:
             chain_names[i], file_sizes[i], files_analysed[i], file_times[i]))
     confirm_run = False
 
-    while confirm_run != True:
+    while confirm_run is not True:
         confirm_run = raw_input("y/n: ")
 
         if confirm_run == 'y':
@@ -217,8 +216,8 @@ if run_analysis is True:
             r.gROOT.ProcessLine(".q")
         if i == len(file_paths) - 1 and run_sum is False:
             r.gROOT.SetBatch(False)
-            # r.gROOT.ProcessLine("new TBrowser")
-            # os.system("root -l")
+            r.gROOT.ProcessLine("new TBrowser")
+            os.system("root -l")
 
 if run_sum is True:
     print("\nSumming Histograms...")
