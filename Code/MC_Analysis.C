@@ -66,12 +66,9 @@ void MC_Analysis::Loop()
 		// extracts kinematic variables from 4-vectors
 		#include "Headers/VariableExtraction.h"
 
-
-
-		// Apply selection cuts & fill
-		bool event_pair = event_pair_truth();			// Pre-selection cut
-		bool passed_cuts = initial_cuts_truth();		// Selection cut
-
+		// apply selection cuts & fill
+		bool event_pair = event_pair_truth();
+		bool passed_cuts = initial_cuts_truth();
 		if (event_pair == true) {
 			if (passed_cuts == true){
 
@@ -92,7 +89,6 @@ void MC_Analysis::Loop()
 				}
 				h_ljet_inv_mass->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
 				h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
-
 
 				// ------------------------ CONES ----------------------------//
 				h_elec_iso_etcone20->Fill(elec_0_iso_etcone20);
@@ -136,6 +132,12 @@ void MC_Analysis::Loop()
 				h_ljet_delta_R->Fill(DeltaR(ljet_0_p4,ljet_1_p4));
 				h_lep_delta_R->Fill(DeltaR(lep_0_p4,lep_1_p4));
 
+				// 2D Plots
+				// h_lep_eta_L_SL->Fill(lep_0_eta, lep_1_eta);
+				// h_lep_phi_L_SL->Fill(lep_0_phi, lep_1_phi);
+				// h_ljet_eta_L_SL->Fill(ljet_0_eta, ljet_1_eta);
+				// h_ljet_phi_L_SL->Fill(ljet_0_phi, ljet_1_phi);
+
 				// ------------------------- JETS --------------------------- //
 				h_n_jets->Fill(n_jets);
 
@@ -150,12 +152,10 @@ void MC_Analysis::Loop()
 				h_ljet_delta_eta_3->Fill(ljet_2_eta - ljet_3_eta);
 				}
 
-				h_lep_eta_L_SL->Fill(lep_0_eta, lep_1_eta);
-				h_ljet_eta_L_SL->Fill(ljet_0_eta, ljet_1_eta);
-
 				if (n_jets == 2) {
 					h_ljet_0_eta_2jets->Fill(ljet_0_eta);
 					h_ljet_1_eta_2jets->Fill(ljet_1_eta);
+					h_ljet_eta_L_SL_2jets->Fill(ljet_0_eta, ljet_1_eta);
 				}
 				if (n_jets == 3) {
 					h_ljet_0_eta_3jets->Fill(ljet_0_eta);
@@ -179,10 +179,13 @@ void MC_Analysis::Loop()
 				double Z_cent = Centrality(lep_0_p4, lep_1_p4,
 											ljet_0_p4, ljet_1_p4);
 				h_Z_cent->Fill(Z_cent);
-
+				//if (lep_1 == 0) cout << "	lep_1 ERROR" << endl;
 
 			}
-			// NO Cuts
+			////////////////////////////////////////////////////////////////////
+			//--------------------------- NO Cuts ----------------------------//
+			////////////////////////////////////////////////////////////////////
+
 			// --------------------- INVARIANT MASS --------------------- //
 			double dilep_inv_mass_NoCut = InvariantMass(lep_0_p4, lep_1_p4);
 			if (lep_type == "Electron") {
@@ -198,15 +201,15 @@ void MC_Analysis::Loop()
 			} if (lep_type == "ElectronTau") {
 				h_elec_tau_inv_mass_NoCut->Fill(dilep_inv_mass_NoCut);
 			}
+			h_ljet_inv_mass->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
+			h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
+
 			// ------------------------ CONES ----------------------------//
 			h_elec_iso_etcone20->Fill(elec_0_iso_etcone20);
 			h_muon_iso_etcone20->Fill(muon_0_iso_etcone20);
 
 			h_elec_iso_ptcone30->Fill(elec_0_iso_ptcone30);
 			h_muon_iso_ptcone30->Fill(muon_0_iso_ptcone30);
-
-			h_ljet_inv_mass->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
-			h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
 
 			// ----------------------- Z BOSON -------------------------- //
 			double Z_cent_NoCut = Centrality(lep_0_p4, lep_1_p4,
@@ -221,8 +224,14 @@ void MC_Analysis::Loop()
 			h_ljet_delta_R_NoCut->Fill(DeltaR(ljet_0_p4,ljet_1_p4));
 			h_lep_delta_R_NoCut->Fill(DeltaR(lep_0_p4,lep_1_p4));
 
-			int lep_n;
-			h_lep_n->Fill(lep_n);
+			// 2D Plots
+			h_lep_eta_L_SL->Fill(lep_0_eta, lep_1_eta);
+			h_lep_phi_L_SL->Fill(lep_0_phi, lep_1_phi);
+			h_ljet_eta_L_SL->Fill(ljet_0_eta, ljet_1_eta);
+			h_ljet_phi_L_SL->Fill(ljet_0_phi, ljet_1_phi);
+
+
+			h_lep_n->Fill(n_leptons);
 		}
 
 
@@ -237,7 +246,10 @@ void MC_Analysis::Loop()
 	h_lep_eta_L_SL->GetYaxis()->SetTitle("Sub-leading");
 	h_ljet_eta_L_SL->GetXaxis()->SetTitle("Leading");
 	h_ljet_eta_L_SL->GetYaxis()->SetTitle("Sub-leading");
-
+	h_lep_phi_L_SL->GetXaxis()->SetTitle("Leading");
+	h_lep_phi_L_SL->GetYaxis()->SetTitle("Sub-leading");
+	h_ljet_phi_L_SL->GetXaxis()->SetTitle("Leading");
+	h_ljet_phi_L_SL->GetYaxis()->SetTitle("Sub-leading");
 
 	TFile outfile("outfile.root","RECREATE");
 	#include "Headers/WriteHistos.h"		// Writes all histograms
