@@ -170,18 +170,6 @@ void MC_Analysis::ParticleSelection() {
 	}
 }
 
-// Checks an event is a lepton-antilepton pair & at least two jets
-bool MC_Analysis::event_pair_truth() {
-	bool event_pair=true;
-
-	if (lep_1 == 0) event_pair = false;
-	if (lep_0_q == lep_1_q) event_pair = false;
-
-	if (ljet_1 == 0) event_pair=false;
-
-	return event_pair;
-}
-
 //If Vector 3 or 4 lies between Vector 1 and Vector 2, with pT greater than 25GeV
 bool RapidityIntervalCheck(TLorentzVector *Vector1, TLorentzVector *Vector2, TLorentzVector *Vector3, TLorentzVector *Vector4) {
 
@@ -209,56 +197,40 @@ bool RapidityIntervalCheck(TLorentzVector *Vector1, TLorentzVector *Vector2, TLo
 
 }
 
-// Finds out if an event meets initial selection cut criteria
-bool MC_Analysis::initial_cuts_truth() {
-	bool passed_cuts=true;
-
-	// SELECTION CUTS // (Work to isolate VBF)
-
-	bool cut_kin=true;			// Kinematic Acceptance Cut pT <cut_kin_E GeV
-	double cut_kin_E = 30;
-	bool cut_bjets=true;			// Removes events containing b meson jets
-	bool cut_jets_pt=true;			// Cuts jet pt
-	double cut_jets_L_pt = 55;		// leading jet at 55 GeV
-	double cut_jets_SL_pt = 45;		// Sub-leading jet at 45 GeV
-	bool cut_jet_inv_mass=true;		// Invariant mass of leading jets > 250 GeV
-	double cut_jet_inv_mass_E = 250;
-	bool cut_inv_mass_min=true;		// Invariant mass > 40 GeV
-	double cut_inv_mass_min_E = 40;
-
-	// extracts kinematic variables from 4-vectors
+void MC_Analysis::SelectionCuts() {
 	#include "Headers/VariableExtraction.h"
-	if (cut_kin == true) {
-		if (lep_0_pt < cut_kin_E || lep_1_pt < cut_kin_E) {
-			passed_cuts=false;
-		}
+
+	//------------------------- PRE-SELECTION CUTS ---------------------------//
+	pre_selection_cuts=true;
+
+	if (lep_1 == 0) pre_selection_cuts = false;		// Two leptons
+
+	if (lep_0_q == lep_1_q) pre_selection_cuts = false;		// Lepton pair
+
+	if (ljet_1 == 0) pre_selection_cuts = false;	// At least two light jets
+
+	double cut_kin_E = 30;							// lep_pt >= 25 GeV
+	if (lep_0_pt < cut_kin_E or lep_1_pt < cut_kin_E) {
+		pre_selection_cuts = false;
 	}
-	if (cut_inv_mass_min == true) {
-		if (InvariantMass(lep_0_p4, lep_1_p4) < cut_inv_mass_min_E) {
-			passed_cuts=false;
-		}
-	}
-	if (cut_bjets == true) {
-		if (bjet_0 > 0) {
-			passed_cuts=false;
-		}
-	}
-	if (cut_jets_pt == true) {
-		if (ljet_0_pt < cut_jets_L_pt) {
-			passed_cuts=false;
-		}
-		if (ljet_1_pt < cut_jets_SL_pt) {
-			passed_cuts=false;
-		}
-	}
-	if (cut_jet_inv_mass == true) {
-		if (InvariantMass(ljet_0_p4, ljet_1_p4) < cut_jet_inv_mass_E) {
-			passed_cuts=false;
-		}
+
+	double cut_jets_L_pt = 55;						// leading jet at 55 GeV
+	if (ljet_0_pt < cut_jets_L_pt) pre_selection_cuts = false;
+
+	double cut_jets_SL_pt = 45;						// Sub-leading jet at 45 GeV
+	if (ljet_1_pt < cut_jets_SL_pt) pre_selection_cuts = false;
+
+	if (bjet_0 > 0) pre_selection_cuts = false;		// No b jets
+
+	//---------------------------- BASELINE CUTS -----------------------------//
+	baseline_cuts=true;
+
+	double cut_jet_inv_mass = 250;		// Inv mass of leading jets > 250 GeV
+	if (InvariantMass(ljet_0_p4, ljet_1_p4) < cut_jet_inv_mass) {
+		baseline_cuts = false;
 	}
 
 
-	return passed_cuts;
 }
 
 
