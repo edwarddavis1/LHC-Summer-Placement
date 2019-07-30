@@ -67,13 +67,14 @@ void MC_Analysis::Loop()
 		#include "Headers/VariableExtraction.h"
 
 		// apply selection cuts & fill
-		bool event_pair = event_pair_truth();
-		bool passed_initial_cuts = selection_cuts_truth();
-		if (event_pair) {
-			if (passed_initial_cuts){
+		SelectionCuts();
+		if (pre_selection_cuts == 1) {
+			#include "Headers/PreSelectionHistos.h"
+
+			if (baseline_cuts){
 				#include "Headers/BaselineHistos.h"
 			}
-			#include "Headers/NoCutHistos.h"
+
 		}
 
 
