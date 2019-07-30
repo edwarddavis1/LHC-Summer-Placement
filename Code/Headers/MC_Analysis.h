@@ -23,27 +23,27 @@ public :
 
    ///--------------- My Function Definitions ---------------///
    #include "FunctionDefinitions.h"
-    ///------------------ LEPTON INFORMATION ------------------///  
-    string lep_type;
+    ///------------------ LEPTON INFORMATION ------------------///
+    string          lep_type;
 
-    Int_t n_leptons; 
+    Int_t           n_leptons;
 
-    UInt_t          *lep_0; 
-    TLorentzVector  *lep_0_p4; 
-    Float_t         *lep_0_q; 
+    UInt_t          lep_0;
+    TLorentzVector  *lep_0_p4;
+    Float_t         *lep_0_q;
 
-    UInt_t          *lep_1; 
-    TLorentzVector  *lep_1_p4; 
-    Float_t         *lep_1_q; 
-    TLorentzVector    *lep_0_reco_p4; 
-    TLorentzVector    *lep_1_reco_p4;  
+    UInt_t          lep_1;
+    TLorentzVector  *lep_1_p4;
+    Float_t         *lep_1_q;
+    TLorentzVector    *lep_0_reco_p4;
+    TLorentzVector    *lep_1_reco_p4;
 
-    TLorentzVector    *lep_0_reco_matched_p4; 
-    TLorentzVector    *lep_1_reco_matched_p4; 
-    TLorentzVector  *lep_0_invis_p4; 
-    TLorentzVector  *lep_1_invis_p4; 
-    TLorentzVector  *lep_0_vis_p4; 
-    TLorentzVector *lep_1_vis_p4; 
+    TLorentzVector    *lep_0_reco_matched_p4;
+    TLorentzVector    *lep_1_reco_matched_p4;
+    TLorentzVector  *lep_0_invis_p4;
+    TLorentzVector  *lep_1_invis_p4;
+    TLorentzVector  *lep_0_vis_p4;
+    TLorentzVector *lep_1_vis_p4;
     ///----------------- SIMULATION CHOOSING -----------------///
     TString decay_chain_file;
     string choice;
@@ -1619,7 +1619,7 @@ public :
 #endif
 
 #ifdef MC_Analysis_cxx
-MC_Analysis::MC_Analysis(TTree *tree) : fChain(0) 
+MC_Analysis::MC_Analysis(TTree *tree) : fChain(0)
 {
 ///---- Select which dataset you want to use ----///
 
