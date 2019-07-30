@@ -21,9 +21,10 @@ public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
    Int_t           fCurrent; //!current Tree number in a TChain
 
-   ///--------------- My Function Definitions ---------------///
+   //------------------------ My Function Definitions ------------------------//
    #include "FunctionDefinitions.h"
-    ///------------------ LEPTON INFORMATION ------------------///
+
+    //------------------------- LEPTON INFORMATION ---------------------------//
     string          lep_type;
 
     Int_t           n_leptons;
@@ -44,9 +45,18 @@ public :
     TLorentzVector  *lep_1_invis_p4;
     TLorentzVector  *lep_0_vis_p4;
     TLorentzVector *lep_1_vis_p4;
-    ///----------------- SIMULATION CHOOSING -----------------///
-    TString decay_chain_file;
-    string choice;
+
+    //--------------------------- SELECTION CUTS -----------------------------//
+    bool            pre_selection_cuts;
+    bool            baseline_cuts;
+    bool            search_cuts;
+    bool            control_cuts;
+    bool            high_mass_cuts;
+
+
+    //------------------------- SIMULATION CHOOSING --------------------------//
+    TString         decay_chain_file;
+    string          choice;
 
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
