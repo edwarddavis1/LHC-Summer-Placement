@@ -12,8 +12,8 @@ auto start = chrono::steady_clock::now();
 // For Loading percentages
 float prog, load;
 int prog_int, last_prog=0;
-
 int cut_entries=0;
+
 
 void MC_Analysis::Loop()
 {
@@ -59,22 +59,30 @@ void MC_Analysis::Loop()
 			cout << prog_int*10-10 << "%" << endl;
 			last_prog = prog_int;
 		}
-
+		n_leptons = n_electrons + n_muons + n_taus;
 		ParticleSelection();		// Selects lep_ variables
 		event_type();				// Sets lep_type
 
 		// extracts kinematic variables from 4-vectors
 		#include "Headers/VariableExtraction.h"
 
-		// apply selection cuts & fill
-		SelectionCuts();
-		if (pre_selection_cuts == 1) {
-			#include "Headers/PreSelectionHistos.h"
 
-			if (baseline_cuts){
+		// apply selection cuts & fill // You were checking the tau phi cut
+		SelectionCuts();
+		if (pre_selection_cuts) {
+			#include "Headers/PreSelectionHistos.h"
+			if (baseline_cuts) {
 				#include "Headers/BaselineHistos.h"
 			}
-
+			if (search_cuts) {
+				#include "Headers/SearchHistos.h"
+			}
+			if (control_cuts) {
+				#include "Headers/ControlHistos.h"
+			}
+			if (high_mass_cuts) {
+				#include "Headers/HighMassHistos.h"
+			}
 		}
 
 
@@ -83,7 +91,7 @@ void MC_Analysis::Loop()
 	}
 	// ---------------------- HISTOGRAM STYLE --------------------------- //
 	h_elec_inv_mass->SetLineColor(4);
-	h_elec_inv_mass_NoCut->SetLineColor(3);
+	h_elec_inv_mass_preselect->SetLineColor(3);
 
 	h_lep_eta_L_SL->GetXaxis()->SetTitle("Leading");
 	h_lep_eta_L_SL->GetYaxis()->SetTitle("Sub-leading");
