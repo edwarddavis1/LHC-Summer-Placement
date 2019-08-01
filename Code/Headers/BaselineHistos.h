@@ -4,14 +4,6 @@ if (lep_type == "Electron") {
     h_elec_inv_mass->Fill(dilep_inv_mass);
 } if (lep_type == "Muon") {
     h_muon_inv_mass->Fill(dilep_inv_mass);
-} if (lep_type == "Tau") {
-    h_tau_inv_mass->Fill(dilep_inv_mass);
-} if (lep_type == "ElectronMuon") {
-    h_elec_muon_inv_mass->Fill(dilep_inv_mass);
-} if (lep_type == "MuonTau") {
-    h_muon_tau_inv_mass->Fill(dilep_inv_mass);
-} if (lep_type == "ElectronTau") {
-    h_elec_tau_inv_mass->Fill(dilep_inv_mass);
 }
 h_ljet_inv_mass->Fill(InvariantMass(ljet_0_p4, ljet_1_p4));
 h_bjet_inv_mass->Fill(InvariantMass(bjet_0_p4, bjet_1_p4));
