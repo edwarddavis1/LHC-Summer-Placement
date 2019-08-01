@@ -29,22 +29,22 @@ public :
 
     Int_t           n_leptons;
 
-    UInt_t          lep_0;
+    UInt_t          *lep_0;
     TLorentzVector  *lep_0_p4;
     Float_t         *lep_0_q;
 
-    UInt_t          lep_1;
+    UInt_t          *lep_1;
     TLorentzVector  *lep_1_p4;
     Float_t         *lep_1_q;
-    TLorentzVector    *lep_0_reco_p4;
-    TLorentzVector    *lep_1_reco_p4;
+    TLorentzVector  *lep_0_reco_p4;
+    TLorentzVector  *lep_1_reco_p4;
 
-    TLorentzVector    *lep_0_reco_matched_p4;
-    TLorentzVector    *lep_1_reco_matched_p4;
+    TLorentzVector  *lep_0_reco_matched_p4;
+    TLorentzVector  *lep_1_reco_matched_p4;
     TLorentzVector  *lep_0_invis_p4;
     TLorentzVector  *lep_1_invis_p4;
     TLorentzVector  *lep_0_vis_p4;
-    TLorentzVector *lep_1_vis_p4;
+    TLorentzVector  *lep_1_vis_p4;
 
     //--------------------------- SELECTION CUTS -----------------------------//
     bool            pre_selection_cuts;
@@ -53,6 +53,10 @@ public :
     bool            control_cuts;
     bool            high_mass_cuts;
 
+    //----------------------------- WEIGHTING --------------------------------//
+    double          luminosity_weight;
+    double          final_weighting;
+    double          recipe_weighting;
 
     //------------------------- SIMULATION CHOOSING --------------------------//
     TString         decay_chain_file;
