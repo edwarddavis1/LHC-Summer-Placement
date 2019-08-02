@@ -1,6 +1,11 @@
 #ifndef Generic_Functions_h
 #define Generic_Functions_h
 
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 double InvariantMass(TLorentzVector *Vector1, TLorentzVector *Vector2) {
 
 	double inv_mass = (*Vector1 + *Vector2).M();
@@ -133,11 +138,11 @@ void MC_Analysis::event_type() {
 void MC_Analysis::ParticleSelection() {
 	event_type();
 	if (lep_type == "Electron") {
-		lep_0 = elec_0;
+		lep_0 = & elec_0;
 		lep_0_p4 = elec_0_p4;
 		lep_0_q = & elec_0_q;
 
-		lep_1 = elec_1;
+		lep_1 = & elec_1;
 		lep_1_p4 = elec_1_p4;
 		lep_1_q = & elec_1_q;
 
@@ -145,11 +150,11 @@ void MC_Analysis::ParticleSelection() {
 	}
 
 	if (lep_type == "Muon") {
-		lep_0 = muon_0;
+		lep_0 = & muon_0;
 		lep_0_p4 = muon_0_p4;
 		lep_0_q = & muon_0_q;
 
-		lep_1 = muon_1;
+		lep_1 = & muon_1;
 		lep_1_p4 = muon_1_p4;
 		lep_1_q = & muon_1_q;
 
@@ -157,11 +162,11 @@ void MC_Analysis::ParticleSelection() {
 	}
 
 	if (lep_type == "Tau") {
-		lep_0 = tau_0;
+		lep_0 = & tau_0;
 		lep_0_p4 = tau_0_p4;
 		lep_0_q = & tau_0_q;
 
-		lep_1 = tau_1;
+		lep_1 = & tau_1;
 		lep_1_p4 = tau_1_p4;
 		lep_1_q = & tau_1_q;
 
@@ -170,19 +175,19 @@ void MC_Analysis::ParticleSelection() {
 
 	if (lep_type == "ElectronMuon") {
 		if (elec_0_p4->Pt() > muon_0_p4->Pt()){
-			lep_0 = elec_0;
+			lep_0 = & elec_0;
 			lep_0_p4 = elec_0_p4;
 			lep_0_q = & elec_0_q;
 
-			lep_1 = muon_1;
+			lep_1 = & muon_1;
 			lep_1_p4 = muon_1_p4;
 			lep_1_q = & muon_1_q;
 		} else {
-			lep_0 = muon_0;
+			lep_0 = & muon_0;
 			lep_0_p4 = muon_0_p4;
 			lep_0_q = & muon_0_q;
 
-			lep_1 = elec_1;
+			lep_1 = & elec_1;
 			lep_1_p4 = elec_1_p4;
 			lep_1_q = & elec_1_q;
 		}
@@ -190,19 +195,19 @@ void MC_Analysis::ParticleSelection() {
 
 	if (lep_type == "ElectronTau") {
 		if (elec_0_p4->Pt() > tau_0_p4->Pt()){
-			lep_0 = elec_0;
+			lep_0 = & elec_0;
 			lep_0_p4 = elec_0_p4;
 			lep_0_q = & elec_0_q;
 
-			lep_1 = tau_1;
+			lep_1 = & tau_1;
 			lep_1_p4 = tau_1_p4;
 			lep_1_q = & tau_1_q;
 		} else {
-			lep_0 = tau_0;
+			lep_0 = & tau_0;
 			lep_0_p4 = tau_0_p4;
 			lep_0_q = & tau_0_q;
 
-			lep_1 = elec_1;
+			lep_1 = & elec_1;
 			lep_1_p4 = elec_1_p4;
 			lep_1_q = & elec_1_q;
 		}
@@ -210,24 +215,155 @@ void MC_Analysis::ParticleSelection() {
 
 	if (lep_type == "MuonTau") {
 		if (muon_0_p4->Pt() > tau_0_p4->Pt()){
-			lep_0 = muon_0;
+			lep_0 = & muon_0;
 			lep_0_p4 = muon_0_p4;
 			lep_0_q = & muon_0_q;
 
-			lep_1 = tau_1;
+			lep_1 = & tau_1;
 			lep_1_p4 = tau_1_p4;
 			lep_1_q = & tau_1_q;
 		} else {
-			lep_0 = tau_0;
+			lep_0 = & tau_0;
 			lep_0_p4 = tau_0_p4;
 			lep_0_q = & tau_0_q;
 
-			lep_1 = muon_1;
+			lep_1 = & muon_1;
 			lep_1_p4 = muon_1_p4;
 			lep_1_q = & muon_1_q;
 		}
 	}
 }
+
+// converts character array to string and returns it
+string convertToString(char* a, int size)
+{
+    int i;
+    string s = "";
+    for (i = 0; i < size; i++) {
+        s = s + a[i];
+    }
+    return s;
+}
+
+// gets the name of the pc you're currently logged in to
+string PCName() {
+    char hostname[HOST_NAME_MAX];
+    gethostname(hostname, HOST_NAME_MAX);
+    string hostname_s = convertToString(hostname, strlen(hostname));
+    int first_dot = hostname_s.find(".");
+    string pcname = hostname_s.substr(0,first_dot);
+    return pcname;
+}
+
+// This function will return a vector of doubles, containing information
+// about luminosity weighting for a given file ID
+vector<double> csv_reader(string ID) {
+
+	// create the various variables to be used
+	string Line, prevLine;
+	vector <double> info;
+	int matchPos = 0;
+	bool counterActive = true;
+
+	// detect which computer is being used
+	string pcname = PCName();
+
+	ifstream file;
+
+	// get file contianing luminosity information
+	if (pcname == "higgs") {
+		cout << "getting luminosity info from higgs" << endl;
+		file.open("/higgs-data3/sam/forTomRyunAliceLuca/v02/LepUniv_xsec.csv");
+	} else if (pcname == "pc2014") {
+		cout << "getting luminosity info from pc2014" << endl;
+		file.open("/pc2014-data4/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
+	} else if (pcname == "pc2012") {
+		cout << "getting luminosity info from pc2012" << endl;
+		file.open("/pc2012-data1/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
+	}
+	getline(file, Line, '\n');  //Get a new line
+
+	while(!file.eof()){  // While not at the end of the file
+		getline(file,Line);  // Get a new line
+
+		// increment the counter if the counter is active
+		if(counterActive) matchPos++;
+
+		// if the ID finds a match for line number, deactivate the counter
+		if( Line.substr(0,6) == ID ) counterActive = false;
+	}
+
+	file.close();
+
+	ifstream file2;
+
+	if (pcname == "higgs") {
+		file2.open("/higgs-data3/sam/forTomRyunAliceLuca/v02/LepUniv_xsec.csv");
+	} else if (pcname == "pc2012") {
+		file2.open("/pc2012-data1/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
+	} else if (pcname == "pc2014") {
+		file2.open("/pc2014-data4/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
+	}
+
+	// get lines from the file until it reaches the line with the matched ID
+	for(int i = 0; i < matchPos; i++) getline(file2, Line);
+
+	double SampleID;
+	double xsectioninpb;
+	double kfactor;
+	double filterefficiency;
+	double xsecunc;
+
+	// get the sample ID from the file
+	getline(file2, Line, ',');
+	SampleID = stod(Line);
+	info.push_back(SampleID);
+
+	// get the cross section in picobarns from the file
+	getline(file2, Line, ',');
+	getline(file2, Line, ',');
+	xsectioninpb = stod(Line);
+	info.push_back(xsectioninpb);
+
+	// get the k factor from the file
+	getline(file2, Line, ',');
+	kfactor = stod(Line);
+	info.push_back(kfactor);
+
+	// get the filter efficiency from the file
+	getline(file2, Line, ',');
+	filterefficiency = stod(Line);
+	info.push_back(filterefficiency);
+
+	// get the cross section 'unc' from the file
+	///NO IDEA WHAT THIS IS
+	getline(file2, Line, '\n');
+	xsecunc = stod(Line);
+	info.push_back(xsecunc);
+
+	return info;
+
+}
+
+// Luminosity weighting function
+// extra weight to apply is xs*L/N
+// N=initial # of generated MC events, luminosity is luminosity of detector
+// for MC scaling)
+// so have Lum_weighting = xs * k * eff_filter / N
+double luminosity_weighting_function(vector<double> info, double N,
+										double luminosity) {
+
+	double xs = info[1];			// Cross section
+	double k = info[2];				// Correction on cross section calculation
+	double eff_filter = info[3];	// Filtering efficiency
+	double extra_weight;
+
+	extra_weight =  luminosity*(xs*k*eff_filter)/N;
+
+	return extra_weight;
+
+}
+
 
 //If Vector 3 or 4 lies between Vector 1 and Vector 2, with pT greater than 25GeV
 bool RapidityIntervalCheck(TLorentzVector *Vector1, TLorentzVector *Vector2,
@@ -295,7 +431,7 @@ void MC_Analysis::SelectionCuts() {
 
 
 
-	//-------------------------- ADDITIONAL CUTS -----------------------------//
+	// -------------------------- ADDITIONAL CUTS -----------------------------//
 	baseline_cuts = true;
 	search_cuts = true;
 	control_cuts = true;
@@ -379,7 +515,14 @@ void MC_Analysis::SelectionCuts() {
 					search_cuts = false;
 					control_cuts = false;
 					high_mass_cuts = false;
+				}
 
+				double t_delta_phi = DeltaPhi(lep_0_p4, lep_1_p4);
+				if (t_delta_phi >= 2.2) {
+					baseline_cuts = false;
+					search_cuts = false;
+					control_cuts = false;
+					high_mass_cuts = false;
 				}
 		}
 	}
