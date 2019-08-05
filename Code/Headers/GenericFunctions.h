@@ -314,13 +314,10 @@ vector<double> csv_reader(string ID) {
 
 	// get file contianing luminosity information
 	if (pcname == "higgs") {
-		cout << "getting luminosity info from higgs..." << endl;
 		file.open("/higgs-data3/sam/forTomRyunAliceLuca/v02/LepUniv_xsec.csv");
 	} else if (pcname == "pc2014") {
-		cout << "getting luminosity info from pc2014..." << endl;
 		file.open("/pc2014-data4/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
 	} else if (pcname == "pc2012") {
-		cout << "getting luminosity info from pc2012..." << endl;
 		file.open("/pc2012-data1/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
 	}
 	getline(file, Line, '\n');  //Get a new line
@@ -360,7 +357,6 @@ vector<double> csv_reader(string ID) {
 	getline(file2, Line, ',');
 	SampleID = stod(Line);
 	info.push_back(SampleID);
-    cout << "From csv func: " << SampleID << endl;
 
 	// get the cross section in picobarns from the file
 	getline(file2, Line, ',');
@@ -399,9 +395,7 @@ double GetN(string dataset) {
     }
     string pcname = PCName();
 
-    if (pcname == 'pc2014') ifstream N_file ("N_values_pc2014.txt");
-    // elif (pcname == 'pc2012') ifstream N_file ("N_values_pc2012.txt");
-    // elif (pcname == 'higgs') ifstream N_file ("N_values_higgs.txt");
+    ifstream N_file ("N_values.txt");
     string line;
     double N;
     if (N_file.is_open()) {
@@ -433,8 +427,13 @@ double luminosity_weighting_function(vector<double> info, double N,
 	double eff_filter = info[3];	// Filtering efficiency
 	double lum_weight;
 
-	lum_weight =  luminosity*(xs*k*eff_filter)/N;
+    cout << "cross section: " << xs << endl;
+    cout << "k factor: " << k << endl;
+    cout << "eff_filter: " << eff_filter << endl;
+    cout << "N: " << N << endl;
 
+	lum_weight =  luminosity*(xs*k*eff_filter)/N;
+    cout << "lum weight: " << lum_weight << endl;
 	return lum_weight;
 
 }
@@ -527,7 +526,8 @@ void MC_Analysis::SelectionCuts() {
 		// inv mass of leading jets
 		double cut_jet_inv_mass = 250;			// Baseline, Search, Control
 		double cut_jet_inv_mass_HM = 1500;		// High-Mass
-		if (InvariantMass(ljet_0_p4, ljet_1_p4) < cut_jet_inv_mass) {
+        double ljet_inv_mass = InvariantMass(ljet_0_p4, ljet_1_p4);
+		if (ljet_inv_mass < cut_jet_inv_mass) {
 			baseline_cuts = false;
 			search_cuts = false;
 			control_cuts = false;
