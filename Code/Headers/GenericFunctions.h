@@ -6,6 +6,68 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// converts character array to string and returns it
+string convertToString(char* a, int size)
+{
+    int i;
+    string s = "";
+    for (i = 0; i < size; i++) {
+        s = s + a[i];
+    }
+    return s;
+}
+
+// gets the name of the pc you're currently logged in to
+string PCName() {
+    char hostname[HOST_NAME_MAX];
+    gethostname(hostname, HOST_NAME_MAX);
+    string hostname_s = convertToString(hostname, strlen(hostname));
+    int first_dot = hostname_s.find(".");
+    string pcname = hostname_s.substr(0,first_dot);
+    return pcname;
+}
+
+vector<string> split(string strToSplit, char delimeter) {
+    stringstream ss(strToSplit);
+    string item;
+    vector<string> splittedStrings;
+    while (getline(ss, item, delimeter))
+    {
+       splittedStrings.push_back(item);
+    }
+    return splittedStrings;
+}
+
+// find out which .root file is currently being read
+string DataSet() {
+	string file_path = gDirectory->GetPath();
+	vector<string> file_split;
+	char delimeter{'.'};
+	file_split = split(file_path, delimeter);
+
+    string dataset;
+    string pcname = PCName();
+    if (pcname == "higgs") dataset = file_split[6];
+    else dataset = file_split[7];
+	return dataset;
+}
+
+// find out which .root file is currently being read
+string DataFullName() {
+	string data_name = gDirectory->GetPath();
+	return data_name;
+}
+
+// find out ID of current file
+string GetID() {
+	string file_path = gDirectory->GetPath();
+	vector<string> file_split;
+	char delimeter{'.'};
+	file_split = split(file_path, delimeter);
+	string dataset = file_split[6];
+	return dataset;
+}
+
 double InvariantMass(TLorentzVector *Vector1, TLorentzVector *Vector2) {
 
 	double inv_mass = (*Vector1 + *Vector2).M();
@@ -234,26 +296,6 @@ void MC_Analysis::ParticleSelection() {
 	}
 }
 
-// converts character array to string and returns it
-string convertToString(char* a, int size)
-{
-    int i;
-    string s = "";
-    for (i = 0; i < size; i++) {
-        s = s + a[i];
-    }
-    return s;
-}
-
-// gets the name of the pc you're currently logged in to
-string PCName() {
-    char hostname[HOST_NAME_MAX];
-    gethostname(hostname, HOST_NAME_MAX);
-    string hostname_s = convertToString(hostname, strlen(hostname));
-    int first_dot = hostname_s.find(".");
-    string pcname = hostname_s.substr(0,first_dot);
-    return pcname;
-}
 
 // This function will return a vector of doubles, containing information
 // about luminosity weighting for a given file ID
@@ -272,13 +314,13 @@ vector<double> csv_reader(string ID) {
 
 	// get file contianing luminosity information
 	if (pcname == "higgs") {
-		cout << "getting luminosity info from higgs" << endl;
+		cout << "getting luminosity info from higgs..." << endl;
 		file.open("/higgs-data3/sam/forTomRyunAliceLuca/v02/LepUniv_xsec.csv");
 	} else if (pcname == "pc2014") {
-		cout << "getting luminosity info from pc2014" << endl;
+		cout << "getting luminosity info from pc2014..." << endl;
 		file.open("/pc2014-data4/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
 	} else if (pcname == "pc2012") {
-		cout << "getting luminosity info from pc2012" << endl;
+		cout << "getting luminosity info from pc2012..." << endl;
 		file.open("/pc2012-data1/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
 	}
 	getline(file, Line, '\n');  //Get a new line
@@ -318,6 +360,7 @@ vector<double> csv_reader(string ID) {
 	getline(file2, Line, ',');
 	SampleID = stod(Line);
 	info.push_back(SampleID);
+    cout << "From csv func: " << SampleID << endl;
 
 	// get the cross section in picobarns from the file
 	getline(file2, Line, ',');
@@ -345,6 +388,38 @@ vector<double> csv_reader(string ID) {
 
 }
 
+double GetN(string dataset) {
+    char delimeter{'_'};
+    vector<string> split_dataset = split(dataset, delimeter);
+    string chain_name;
+    for (int i = 2; i< split_dataset.size(); i++) {
+        if (i != split_dataset.size() - 1) {
+            chain_name += (split_dataset[i] + '_');
+        } else chain_name += (split_dataset[i]);
+    }
+    string pcname = PCName();
+
+    if (pcname == 'pc2014') ifstream N_file ("N_values_pc2014.txt");
+    // elif (pcname == 'pc2012') ifstream N_file ("N_values_pc2012.txt");
+    // elif (pcname == 'higgs') ifstream N_file ("N_values_higgs.txt");
+    string line;
+    double N;
+    if (N_file.is_open()) {
+        while(getline(N_file, line)) {
+            char colon{':'};
+            vector<string> split_line = split(line, colon);
+            string file_chain = split_line[0];
+            string str_N = split_line[1];
+            if (file_chain == chain_name) {
+                N = stod(str_N);
+            }
+        }
+        N_file.close();
+    } else cout << "failed to open file" << endl;
+    return N;
+}
+
+
 // Luminosity weighting function
 // extra weight to apply is xs*L/N
 // N=initial # of generated MC events, luminosity is luminosity of detector
@@ -356,11 +431,11 @@ double luminosity_weighting_function(vector<double> info, double N,
 	double xs = info[1];			// Cross section
 	double k = info[2];				// Correction on cross section calculation
 	double eff_filter = info[3];	// Filtering efficiency
-	double extra_weight;
+	double lum_weight;
 
-	extra_weight =  luminosity*(xs*k*eff_filter)/N;
+	lum_weight =  luminosity*(xs*k*eff_filter)/N;
 
-	return extra_weight;
+	return lum_weight;
 
 }
 
