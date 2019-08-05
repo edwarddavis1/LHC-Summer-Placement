@@ -4,6 +4,10 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <chrono>
+#include "Headers/Get_N_pc2014.h"
+#include "Headers/Get_N_higgs.h"
+#include "Headers/Get_N_pc2012.h"
+#include "Headers/Get_N_pc2014_v2.h"
 
 // Used to measure the elapsed time
 auto start = chrono::steady_clock::now();
@@ -17,6 +21,7 @@ int cut_entries=0;
 
 void MC_Analysis::Loop()
 {
+
 	// if the chain is empty, end the loop
 	if (fChain == 0) return;
 
@@ -25,7 +30,32 @@ void MC_Analysis::Loop()
 	// set number of bytes to zero
 	Long64_t nbytes = 0, nb = 0;
 
+	//--------------------------- POKING SECTION -----------------------------//
+	string dataset = DataSet();
+	string pcname = PCName();
+	string data_name = DataFullName();
+	double N = 0;
+	double luminosity;
+	if (pcname == "pc2014" or pcname == "pc2012") {
+		N = GetN(dataset);
+		luminosity = 36236.9;
+	}
+	// STILL NEED TO MAKE HIGGS WORK 
 
+	// else if (pcname == "higgs") {
+	// 	N = GetN_higgs(dataset);
+	// 	if (data_name.find("r9364") != string::npos) {
+	// 		luminosity = 36236.9;
+	// 	}
+	// 	else if (data_name.find("r10201") != string::npos) {
+	// 		luminosity = 43587.3;
+	// 	}
+	// 	else cout << "FAILED" << endl;
+	// }
+	string ID = GetID();
+	vector <double> info = csv_reader(ID);
+	double lum_weight = luminosity_weighting_function(info, N, luminosity);
+	// return;
 	////////////////////////////////////////////////////////////////////////////
 	//--------------------------- Book Hists here ----------------------------//
 	////////////////////////////////////////////////////////////////////////////
@@ -52,20 +82,27 @@ void MC_Analysis::Loop()
 		///---------------------------- ANALYSIS ----------------------------///
 		////////////////////////////////////////////////////////////////////////
 
-		// Loading Percentages //
+		// loading Percentages
 		prog = (load / nentries)*10;
 		prog_int = (int)round(prog);
 		if (prog_int != last_prog) {
 			cout << prog_int*10-10 << "%" << endl;
 			last_prog = prog_int;
 		}
+
+		ParticleSelection();			// Selects lep_ variables
+		event_type();					// Sets lep_type
 		n_leptons = n_electrons + n_muons + n_taus;
-		ParticleSelection();		// Selects lep_ variables
-		event_type();				// Sets lep_type
+
+		//--------------------------- WEIGHTING ------------------------------//
+		// vector<double> info = csv_reader(ID);
+		// double lum_weight = luminosity_weighting_function(info,
+		// 										);
+
+		//----------------------- FILLING HISTOGRAMS -------------------------//
 
 		// extracts kinematic variables from 4-vectors
 		#include "Headers/VariableExtraction.h"
-
 
 		// apply selection cuts & fill // You were checking the tau phi cut
 		SelectionCuts();
@@ -93,14 +130,14 @@ void MC_Analysis::Loop()
 	h_elec_inv_mass->SetLineColor(4);
 	h_elec_inv_mass_preselect->SetLineColor(3);
 
-	h_lep_eta_L_SL->GetXaxis()->SetTitle("Leading");
-	h_lep_eta_L_SL->GetYaxis()->SetTitle("Sub-leading");
-	h_ljet_eta_L_SL->GetXaxis()->SetTitle("Leading");
-	h_ljet_eta_L_SL->GetYaxis()->SetTitle("Sub-leading");
-	h_lep_phi_L_SL->GetXaxis()->SetTitle("Leading");
-	h_lep_phi_L_SL->GetYaxis()->SetTitle("Sub-leading");
-	h_ljet_phi_L_SL->GetXaxis()->SetTitle("Leading");
-	h_ljet_phi_L_SL->GetYaxis()->SetTitle("Sub-leading");
+	h_lep_eta_L_SL_preselect->GetXaxis()->SetTitle("Leading");
+	h_lep_eta_L_SL_preselect->GetYaxis()->SetTitle("Sub-leading");
+	h_ljet_eta_L_SL_preselect->GetXaxis()->SetTitle("Leading");
+	h_ljet_eta_L_SL_preselect->GetYaxis()->SetTitle("Sub-leading");
+	h_lep_phi_L_SL_preselect->GetXaxis()->SetTitle("Leading");
+	h_lep_phi_L_SL_preselect->GetYaxis()->SetTitle("Sub-leading");
+	h_ljet_phi_L_SL_preselect->GetXaxis()->SetTitle("Leading");
+	h_ljet_phi_L_SL_preselect->GetYaxis()->SetTitle("Sub-leading");
 
 	TFile outfile("outfile.root","RECREATE");
 	#include "Headers/WriteHistos.h"		// Writes all histograms
