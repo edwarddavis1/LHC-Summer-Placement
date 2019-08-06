@@ -54,7 +54,7 @@ void StackCuts(TString c_name, TString get_hists[], TString file_name,
 	for (UInt_t i=0;i<hists_length;i++){
 		TH1F* h;
 		h = (TH1F*)file->Get(get_hists[i]);
-		h->SetFillColor(i+2);
+		h->SetLineColor(i+2);
 		leg_title=file_name;
 		hs->Add(h);
 		legend->AddEntry(h,get_hists[i],"f");
@@ -79,7 +79,7 @@ void StackCuts(TString c_name, TString get_hists[], TString file_name,
 
 void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 					int hists_len, string MC_type, TString legend_title,
-					bool write) {
+					TString legend_entries[], TString axis_title, bool write) {
 
 	TCanvas *c = new TCanvas(legend_title);
 	auto legend = new TLegend(0.75,0.7,0.99,0.99);
@@ -105,10 +105,12 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 		TFile* file = new TFile("OutputFiles/"+file_names[j]+".root");
 		for (UInt_t i=0; i<hists_len; i++) {
 			TH1F* h = (TH1F*)file->Get(hists[i]);
-			h->SetFillColor(colour);
+			h->SetLineColor(colour);
 			colour += 1;
-			h->SetFillStyle(3001);
-			legend->AddEntry(h,file_names[j]+" "+hists[i],"f");
+			// h->SetFillStyle(3001);
+			legend->AddEntry(h,legend_entries[i],"f");
+			h->GetYaxis()->SetTitle("Counts");
+			h->GetXaxis()->SetTitle(axis_title);
 			if ((i==0) && (j==0)) {
 				h->Draw();
 				h->SetMaximum(1.2*temp_max);
@@ -119,6 +121,7 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 	}
 	legend->SetHeader(legend_title,"C");
 	legend->SetTextFont(42);
+	//legend->SetBorderSize(0);
 	legend->Draw();
 	TLegendEntry *header = (TLegendEntry*)legend->GetListOfPrimitives()->First();
 	header->SetTextFont(42);
@@ -186,12 +189,27 @@ void MakeStack() {
 									"ljet_2_eta_4jets", "ljet_2_eta_5jets"};
 	TString ljet_3_eta_indi[] = {"ljet_3_eta_2jets", "ljet_3_eta_3jets",
 									"ljet_3_eta_4jets", "ljet_3_eta_5jets"};
+	TString ljets_phi[] = {"ljet_0_phi", "ljet_1_phi", "ljet_2_phi",
+							"ljet_3_phi"};
+	TString inv_mass_cuts[] = {"muon_inv_mass_preselect", "muon_inv_mass",
+								"muon_inv_mass_search", "muon_inv_mass_control",
+								"muon_inv_mass_high_mass"};
+	TString centrality[] = {"Z_cent", "Z_cent_search",
+							"Z_cent_control", "Z_cent_high_mass"};
+	TString ljet_inv_mass[] = {"ljet_inv_mass", "ljet_inv_mass_search",
+								"ljet_inv_mass_control",
+								"ljet_inv_mass_high_mass"};
 
 	bool write=true;
 	bool dont_write=false;
+	TString regions[] = {"Baseline", "Search", "Control",
+	 						"High Mass"};
 
-	PlotSameAxes(Zmm2jets, 1, ljet_0_eta_indi, 4, "Zmm",
-					"Zmm2jets ljets 0&1 for 2jets", dont_write);
+	PlotSameAxes(Zmm2jets, 1, centrality, 4, "Zmm",
+					"Zmm2jets Centrality", regions, "Centrality", dont_write);
+
+	PlotSameAxes(Zmm2jets, 1, ljet_inv_mass, 4, "Zmm",
+					"Zmm2jets mjj", regions, "mjj", dont_write);
 
 
 	cout << "Stacks made!" << endl;
