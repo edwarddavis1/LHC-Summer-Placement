@@ -27,6 +27,13 @@ string PCName() {
     return pcname;
 }
 
+bool HiggsTruth() {
+    string pcname = PCName();
+    bool higgs = false;
+    if (pcname == "higgs") higgs = true;
+    return higgs;
+}
+
 vector<string> split(string strToSplit, char delimeter) {
     stringstream ss(strToSplit);
     string item;
@@ -38,25 +45,75 @@ vector<string> split(string strToSplit, char delimeter) {
     return splittedStrings;
 }
 
-// find out which .root file is currently being read
-string DataSet() {
-	string file_path = gDirectory->GetPath();
-	vector<string> file_split;
-	char delimeter{'.'};
-	file_split = split(file_path, delimeter);
+// Splits a string between delimeters and either chooses one substring at
+// position = pos or can get multiple substrings (as a single string) by
+// specifying an end_pos.
+// By setting pos = end_pos, the return string is from pos to the end of string
+string ChooseSplit(string strToSplit, char delimeter, int pos,
+                    int end_pos = 0) {
+    stringstream ss(strToSplit);
+    string item;
+    vector<string> splittedStrings;
+    while (getline(ss, item, delimeter))
+    {
+       splittedStrings.push_back(item);
+    }
 
-    string dataset;
-    string pcname = PCName();
-    if (pcname == "higgs") dataset = file_split[6];
-    else dataset = file_split[7];
-	return dataset;
+    string chosen_split;
+    vector<string> chosen_splits;
+    if (end_pos == pos) end_pos = splittedStrings.size();
+
+    if (end_pos == 0) {
+        string chosen_split = splittedStrings[pos];
+        return chosen_split;
+    }
+    else {
+        for (int i = pos; i < end_pos; i++) {
+            if (i == end_pos - 1) {
+                chosen_splits.push_back(splittedStrings[i]);
+            }
+            else chosen_splits.push_back(splittedStrings[i] + "_");
+        }
+        chosen_split = accumulate(begin(chosen_splits), end(chosen_splits),
+                                    chosen_split);
+        return chosen_split;
+    }
+
 }
 
 // find out which .root file is currently being read
-string DataFullName() {
-	string data_name = gDirectory->GetPath();
-	return data_name;
+string DataPath() {
+	string data_path = gDirectory->GetPath();
+	return data_path;
 }
+
+// find out which .root file is currently being read
+string ChainName() {
+    bool higgs = HiggsTruth();
+    char dot{'.'};
+    char underscore{'_'};
+    string long_chain;
+    string chain_name;
+    string higgs_lum_line;
+    string higgs_lum_code;
+    string data_path = DataPath();
+
+    if (higgs) {
+        long_chain = ChooseSplit(data_path, dot, 6);
+        chain_name = ChooseSplit(long_chain, underscore, 2, 2);
+        higgs_lum_line = ChooseSplit(data_path, dot, 8);
+        higgs_lum_code = ChooseSplit(higgs_lum_line, underscore, 2);
+        chain_name += "_" + higgs_lum_code;
+
+    }
+    else {
+        long_chain = ChooseSplit(data_path, dot, 7);
+        chain_name = ChooseSplit(long_chain, underscore, 2, 2);
+    }
+
+    return chain_name;
+}
+
 
 // find out ID of current file
 string GetID() {
@@ -384,18 +441,22 @@ vector<double> csv_reader(string ID) {
 
 }
 
-double GetN(string dataset) {
-    char delimeter{'_'};
-    vector<string> split_dataset = split(dataset, delimeter);
-    string chain_name;
-    for (int i = 2; i< split_dataset.size(); i++) {
-        if (i != split_dataset.size() - 1) {
-            chain_name += (split_dataset[i] + '_');
-        } else chain_name += (split_dataset[i]);
-    }
-    string pcname = PCName();
+double GetN(string data_path) {
+    bool higgs = HiggsTruth();
+    string chain_name = ChainName();
 
-    ifstream N_file ("N_values.txt");
+    ifstream N_file;
+    int choice = 1;
+    if (higgs) choice = 0;
+    switch(choice) {
+        case 0:
+           N_file.open("N_values_higgs.txt");
+           break;
+        case 1:
+           N_file.open("N_values.txt");
+           break;
+    }
+
     string line;
     double N;
     if (N_file.is_open()) {

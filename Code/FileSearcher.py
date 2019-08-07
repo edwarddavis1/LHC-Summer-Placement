@@ -23,6 +23,7 @@ elif host == "pc2012":
 found_dir = None
 file_paths = []
 chain_names = []
+higgs_lums = []
 file_sizes = []
 files_analysed = []
 file_times = []
@@ -65,9 +66,15 @@ while found_dir is None:
                         chain_name = "_".join(file_path.split(
                             ".")[chain_start].split("_")[2:])
 
-                        # Remove duplicate processes found in higgs
-                        if chain_name in chain_names:
-                            break
+                        # Fixes bug where some chains were missed
+                        if chain_name == "":
+                            chain_name = "_".join(file_path.split(
+                                ".")[chain_start].split("_")[1:])
+
+                        if host == 'higgs':
+                            higgs_lum_line = file_path.split(".")[8]
+                            higgs_lum = higgs_lum_line.split("_")[2]
+                            chain_name = "_".join([chain_name, higgs_lum])
 
                         file_size = os.path.getsize(file_path) / 1e9
                         file_exist = os.path.exists(
@@ -96,8 +103,8 @@ while found_dir is None:
                                 file_last_run = str(line.split(':')[3]) + \
                                     ':' + str(line.split(':')[4].rstrip())
                                 break
-                        print('{:27s} {:.2f} GB	{:13} {:13} {}'.format(
-                            chain_name, file_size, file_analysed, file_time,
+                        print('{:35s} {:.2f} GB	{:13} {}'.format(
+                            chain_name, file_size, file_time,
                             file_last_run))
                         file_paths.append(file_path)
                         chain_names.append(chain_name)
@@ -141,16 +148,18 @@ while (run_analysis is False and run_sum is False and run_stack is False and
 if run_new is True:
     popped = 0
     for i in range(len(files_analysed)):
-        if files_analysed[i] is True:  # If the file previously existed
+        # if the file previously existed
+        if files_analysed[i] is True:
             file_paths.pop(i - popped)
             chain_names.pop(i - popped)
             file_sizes.pop(i - popped)
+            file_times.pop(i - popped)
             popped += 1
 
     print("Comfirm analysis of these %i simulations: " % len(chain_names))
     for i in range(len(chain_names)):
-        print('{:27s} {:.2f} GB	{:14} {:6} s'.format(
-            chain_names[i], file_sizes[i], files_analysed[i], file_times[i]))
+        print('{:27s} {:.2f} GB	{:6}'.format(
+            chain_names[i], file_sizes[i], file_times[i]))
     confirm_run = False
 
     while confirm_run is not True:
@@ -216,8 +225,8 @@ if run_analysis is True:
             r.gROOT.ProcessLine(".q")
         if i == len(file_paths) - 1 and run_sum is False:
             r.gROOT.SetBatch(False)
-            r.gROOT.ProcessLine("new TBrowser")
-            os.system("root -l")
+            # r.gROOT.ProcessLine("new TBrowser")
+            # os.system("root -l")
 
 if run_sum is True:
     print("\nSumming Histograms...")

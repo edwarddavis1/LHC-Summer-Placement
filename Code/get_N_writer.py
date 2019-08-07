@@ -22,6 +22,7 @@ elif host == "pc2012":
 found_dir = None
 file_paths = []
 chain_names = []
+higgs_lums = []
 file_sizes = []
 files_analysed = []
 file_times = []
@@ -61,9 +62,15 @@ while found_dir is None:
                         chain_name = "_".join(file_path.split(
                             ".")[chain_start].split("_")[2:])
 
-                        # Remove duplicate processes found in higgs
-                        if chain_name in chain_names:
-                            break
+                        # Fixes bug where some chains were missed
+                        if chain_name == "":
+                            chain_name = "_".join(file_path.split(
+                                ".")[chain_start].split("_")[1:])
+
+                        if host == 'higgs':
+                            higgs_lum_line = file_path.split(".")[8]
+                            higgs_lum = higgs_lum_line.split("_")[2]
+                            chain_name = "_".join([chain_name, higgs_lum])
 
                         file_size = os.path.getsize(file_path) / 1e9
                         file_exist = os.path.exists(
@@ -99,37 +106,121 @@ while found_dir is None:
                         file_times.append(file_time)
 
 
-func_names = []
-with open("Headers/Get_N.h", "r") as fread:
-    lines = fread.readlines()
-    for line in lines:
-        if line[0] == 'L':
-            func_names.append(line.split(' ')[1])
-fread.close()
+# Write a .C file that writes all the N value to a text file based on header
+# files created by Alice and Luca (Get_N.h)
+# -------------------------------- PC2014 ----------------------------------- #
+if host == 'pc2014':
+    func_names = []
+    with open("Headers/Get_N_pc2014.h", "r") as fread:
+        lines = fread.readlines()
+        for line in lines:
+            if line[0] == 'L':
+                func_names.append(line.split(' ')[1])
+    fread.close()
 
-i = 0
-with open("Write_All_N.C", "w") as f:
-    print("Writing...")
-    # f.write('void Write_All_N() {\n')
-    # f.write('   Long64_t N;')
-    for line in lines:
-        if line[0] == 'L':
-            f.write('void %s {' % func_names[i])
-        elif line[1] == 'r':
-            f.write('    ofstream N_file;\n'
-                    + '    N_file.open'
-                    + '("N_values_pc2014.txt",ios_base::app);\n'
-                    + '    N_file << "%s"' % chain_names[i]
-                    + ' << ":" << N << endl;\n'
-                    + '    N_file.close();\n')
-            i += 1
-        elif line[0] == '/' or line[0] == '#':
-            f.write('')
-        else:
-            f.write(line)
+    # Erase contents of the text file
+    f_txt = open('N_values.txt', 'r+')
+    f_txt.truncate(0)
 
-    f.write("void Write_All_N() {\n")
-    for i in range(len(func_names)):
-        f.write('    ' + func_names[i] + ';\n')
-    f.write('}\n')
-f.close()
+    i = 0
+    with open("Write_All_N.C", "w") as f:
+        print("Writing...")
+        for line in lines:
+            if line[0] == 'L':
+                f.write('void %s {' % func_names[i])
+            elif line[1] == 'r':
+                f.write('    ofstream N_file;\n'
+                        + '    N_file.open'
+                        + '("N_values_pc2014.txt",ios_base::app);\n'
+                        + '    N_file << "%s"' % chain_names[i]
+                        + ' << ":" << N << endl;\n'
+                        + '    N_file.close();\n')
+                i += 1
+            elif line[0] == '/' or line[0] == '#':
+                f.write('')
+            else:
+                f.write(line)
+
+        f.write("void Write_All_N() {\n")
+        for i in range(len(func_names)):
+            f.write('    ' + func_names[i] + ';\n')
+        f.write('}\n')
+    f.close()
+
+# -------------------------------- PC2012 ----------------------------------- #
+elif host == 'pc2012':
+    func_names = []
+    with open("Headers/Get_N_pc2012.h", "r") as fread:
+        lines = fread.readlines()
+        for line in lines:
+            if line[0] == 'L':
+                func_names.append(line.split(' ')[1])
+    fread.close()
+
+    # Erase contents of the text file
+    f_txt = open('N_values.txt', 'r+')
+    f_txt.truncate(0)
+
+    i = 0
+    with open("Write_All_N.C", "w") as f:
+        print("Writing...")
+        for line in lines:
+            if line[0] == 'L':
+                f.write('void %s {' % func_names[i])
+            elif line[1] == 'r':
+                f.write('    ofstream N_file;\n'
+                        + '    N_file.open'
+                        + '("N_values_pc2012.txt",ios_base::app);\n'
+                        + '    N_file << "%s"' % chain_names[i]
+                        + ' << ":" << N << endl;\n'
+                        + '    N_file.close();\n')
+                i += 1
+            elif line[0] == '/' or line[0] == '#':
+                f.write('')
+            else:
+                f.write(line)
+
+        f.write("void Write_All_N() {\n")
+        for i in range(len(func_names)):
+            f.write('    ' + func_names[i] + ';\n')
+        f.write('}\n')
+    f.close()
+
+# -------------------------------- HIGGS ------------------------------------ #
+elif host == 'higgs':
+    func_names = []
+    with open("Headers/Get_N_higgs.h", "r") as fread:
+        lines = fread.readlines()
+        for line in lines:
+            if line[0] == 'L':
+                func_names.append(line.split(' ')[1])
+    fread.close()
+
+    # Erase contents of the text file
+    f_txt = open('N_values_higgs.txt', 'r+')
+    f_txt.truncate(0)
+
+    i = 0
+    with open("Write_All_N.C", "w") as f:
+        print("Writing...")
+        for line in lines:
+            if line[0] == 'L':
+                f.write('void %s {' % func_names[i])
+            elif line[1] == 'r':
+                f.write('    ofstream N_file;\n'
+                        + '    N_file.open'
+                        + '("N_values_higgs.txt",ios_base::app);\n'
+                        + '    N_file << "%s"' % chain_names[i]
+                        + ' << ":" << N << endl;\n'
+                        + '    N_file.close();\n')
+                i += 1
+            elif line[0] == '/' or line[0] == '#':
+                f.write('')
+            else:
+                f.write(line)
+
+        f.write("void Write_All_N() {\n")
+        for i in range(len(func_names)):
+            f.write('    ' + func_names[i] + ';\n')
+        f.write('}\n')
+    f.close()
