@@ -48,7 +48,7 @@ void StackCuts(TString c_name, TString get_hists[], TString file_name,
 	TCanvas *c = new TCanvas(c_name);
 	THStack *hs = new THStack(c_name+"_stack","");
 	TFile* file = new TFile("OutputFiles/"+file_name+".root");
-	auto legend = new TLegend(0.75,0.7,0.99,0.99);
+	auto legend = new TLegend(0.2, 0.2, .8, .8);
 	TString leg_title;
 
 	for (UInt_t i=0;i<hists_length;i++){
@@ -78,11 +78,12 @@ void StackCuts(TString c_name, TString get_hists[], TString file_name,
 
 
 void PlotSameAxes(TString file_names[],int files_len, TString hists[],
-					int hists_len, string MC_type, TString legend_title,
-					TString legend_entries[], TString axis_title, bool write) {
+					int hists_len, string MC_type, TString legend_entries[],
+					TString axis_title, bool write,	bool log_scale) {
 
-	TCanvas *c = new TCanvas(legend_title);
-	auto legend = new TLegend(0.75,0.7,0.99,0.99);
+	TCanvas *c = new TCanvas(axis_title);
+	if (log_scale) c->SetLogy();
+	auto legend = new TLegend(0.74, 0.89, 0.78, 0.8);
 
 
 	float temp_min=0, temp_max=0;
@@ -90,6 +91,7 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 		TFile* file = new TFile("OutputFiles/"+file_names[j]+".root");
 		for (UInt_t i=0; i<hists_len; i++) {
 			TH1F* h = (TH1F*)file->Get(hists[i]);
+			if (log_scale) h->SetMinimum(1);
 			if ((i==0) && (j==0)) {
 				temp_min = h->GetMinimum();
 				temp_max = h->GetMaximum();
@@ -100,16 +102,18 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 			}
 		}
 	}
-	int colour = 2;
+	int colour = 6;
 	for (UInt_t j=0; j<files_len; j++) {
 		TFile* file = new TFile("OutputFiles/"+file_names[j]+".root");
 		for (UInt_t i=0; i<hists_len; i++) {
 			TH1F* h = (TH1F*)file->Get(hists[i]);
-			h->SetLineColor(colour);
+			h->SetStats(kFALSE);
+			h->SetTitle("");
+			h->SetLineColor(kBlack);
+			h->SetFillColor(colour);
 			colour += 1;
-			// h->SetFillStyle(3001);
-			legend->AddEntry(h,legend_entries[i],"f");
-			h->GetYaxis()->SetTitle("Counts");
+			legend->AddEntry(h,legend_entries[i],"l");
+			h->GetYaxis()->SetTitle("Events");
 			h->GetXaxis()->SetTitle(axis_title);
 			if ((i==0) && (j==0)) {
 				h->Draw();
@@ -119,13 +123,10 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 			else h->Draw("same");
 		}
 	}
-	legend->SetHeader(legend_title,"C");
 	legend->SetTextFont(42);
-	//legend->SetBorderSize(0);
+	legend->SetTextSize(0.037);
+	legend->SetBorderSize(0);
 	legend->Draw();
-	TLegendEntry *header = (TLegendEntry*)legend->GetListOfPrimitives()->First();
-	header->SetTextFont(42);
-	header->SetTextSize(0.025);
 
 	if (write == true) {
 		TFile outfile(TString::Format("OutputFiles/SameAxes_%s.root",
@@ -171,6 +172,8 @@ void MakeStack() {
 	TString Zmm2jets[] = {"Zmm2jets_Min_N_TChannel"};
 	TString Zmumu_MV280_500_CFilBVet[] = {"Zmumu_MV280_500_CFilBVet"};
 	TString Zmumu_MV140_280_CFilBVet[] = {"Zmumu_MV140_280_CFilBVet"};
+	TString EW_jj[] = {"EW_Zll_r10201"};
+	TString EW_Zll[] = {"EW_Zll"};
 
 	//-------------------------- Histograms -----------------------------//
 	TString ljet_pt[] = {"ljet_0_pt","ljet_1_pt","ljet_2_pt", "ljet_3_pt"};
@@ -196,20 +199,24 @@ void MakeStack() {
 								"muon_inv_mass_high_mass"};
 	TString centrality[] = {"Z_cent", "Z_cent_search",
 							"Z_cent_control", "Z_cent_high_mass"};
-	TString ljet_inv_mass[] = {"ljet_inv_mass", "ljet_inv_mass_search",
-								"ljet_inv_mass_control",
-								"ljet_inv_mass_high_mass"};
+	TString ljet_inv_mass[] = {"ljet_inv_mass", "ljet_inv_mass_search"};
+	TString ljet_inv_mass_search[] = {"ljet_inv_mass_search"};
 
-	bool write=true;
-	bool dont_write=false;
-	TString regions[] = {"Baseline", "Search", "Control",
-	 						"High Mass"};
+	bool write = true;
+	bool dont_write = false;
+	bool log_scale = true;
+	bool lin_scale = false;
 
-	PlotSameAxes(Zmm2jets, 1, centrality, 4, "Zmm",
-					"Zmm2jets Centrality", regions, "Centrality", dont_write);
+	TString regions[] = {"Baseline", "Search"};
+	TString EW_leg[] = {"EW Zll Search"};
 
-	PlotSameAxes(Zmm2jets, 1, ljet_inv_mass, 4, "Zmm",
-					"Zmm2jets mjj", regions, "mjj", dont_write);
+	// PlotSameAxes(Zmm2jets, 1, centrality, 4, "Zmm",
+	// 				"Zmm2jets Centrality", regions, "Centrality", dont_write,
+					// line_scale);
+
+	PlotSameAxes(EW_jj, 1, ljet_inv_mass_search, 1, "EW_jj",
+					EW_leg, "mjj_r10201 [GeV/c^{2}]", dont_write, log_scale);
+
 
 
 	cout << "Stacks made!" << endl;
