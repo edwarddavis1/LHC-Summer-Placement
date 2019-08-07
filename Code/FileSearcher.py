@@ -21,6 +21,7 @@ elif host == "pc2012":
     chain_start = 7
 
 found_dir = None
+subchains = []
 file_paths = []
 chain_names = []
 higgs_lums = []
@@ -43,6 +44,12 @@ while found_dir is None:
         if chains[i] == "Ztt":
             chains[i] = "Ztt_"
 
+    # Allow for multiple substrings to search for a single chain name if
+    # separated by &
+    for i in range(len(chains)):
+        subchain = chains[i].split("&")
+        subchains.append(subchain)
+
     print("Here's what I found:\n")
 
     # Searches the MC directory for sub-directories containing strings of
@@ -56,8 +63,10 @@ while found_dir is None:
         for dirnames in os.walk(MC_path):
             for dirname in dirnames:
                 # prevents the program grabbing the /mc directory
-                if chains[i] in dirname and dirname != MC_path:
+                if all(substr in dirname for substr in subchains[i]):
+                    # if chains[i] in dirname and dirname != MC_path:
                     found_dir = True
+                    dir_split = dirname.split("_")
                     for filenames in os.walk(dirname):
 
                         filename = filenames[2][0]
