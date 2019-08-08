@@ -9,8 +9,7 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 
 	TCanvas *c = new TCanvas(axis_title);
 	if (log_scale) c->SetLogy();
-	auto legend = new TLegend(0.74, 0.89, 0.78, 0.8);
-
+	auto legend = new TLegend(0.60, 0.89, 0.9, 0.6);
 
 	float temp_min=0, temp_max=0;
 	for (UInt_t j=0; j<files_len; j++) {
@@ -38,11 +37,11 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 			h->SetLineColor(kBlack);
 			h->SetFillColor(colour);
 			colour += 1;
-			legend->AddEntry(h,legend_entries[i+j],"l");
+			legend->AddEntry(h,legend_entries[i+j],"f");
 			h->GetYaxis()->SetTitle("Events");
 			h->GetXaxis()->SetTitle(axis_title);
 			if ((i==0) && (j==0)) {
-				h->Draw();
+				h->Draw("h");
 				h->SetMaximum(1.2*temp_max);
 				h->SetMinimum(temp_min);
 			}
@@ -69,7 +68,7 @@ void PlotStack(TString file_names[],int files_len, TString hists[],
 	TCanvas *c = new TCanvas(axis_title+"_stack");
 	if (log_scale) c->SetLogy();
 	THStack *hs = new THStack(axis_title+"_stack", "");
-	auto legend = new TLegend(0.74, 0.89, 0.78, 0.8);
+	auto legend = new TLegend(0.60, 0.89, 0.9, 0.6);
 
 	float temp_min=0, temp_max=0;
 	for (UInt_t j=0; j<files_len; j++) {
@@ -90,10 +89,11 @@ void PlotStack(TString file_names[],int files_len, TString hists[],
 			h->SetFillColor(colour);
 			colour += 1;
 			hs->Add(h);
+			hs->Draw("h");
 			legend->AddEntry(h,legend_entries[i+j],"f");
 		}
 	}
-	hs->Draw();
+	// hs->Draw();
 	hs->GetYaxis()->SetTitle("Events");
 	hs->GetXaxis()->SetTitle(axis_title);
 
@@ -148,7 +148,10 @@ void MakeStack() {
 	TString Zmumu_MV140_280_CFilBVet[] = {"Zmumu_MV140_280_CFilBVet"};
 	TString VBF[] = {"VBF"};
 	TString VBF_r10201[] = {"VBF_r10201"};
-	TString EW[] = {"VBF_r10201", "ttb_nonallh_r10201", "Diboson"};
+	TString EW[] = {"ttb_nonallh_r10201", "VBF_r10201", "Diboson", "Zll_QCD"};
+	TString EW_leg[] = {"t#bar{t}", "VBF", "Diboson", "Z#rightarrowll QCD"};
+	TString EW_QCD[] = {"VBF_r10201", "Zll_QCD"};
+	TString EW_QCD_leg[] = {"VBF", "Z#rightarrowll QCD"};
 
 	//-------------------------- Histograms -----------------------------//
 	TString ljet_pt[] = {"ljet_0_pt","ljet_1_pt","ljet_2_pt", "ljet_3_pt"};
@@ -184,7 +187,7 @@ void MakeStack() {
 	bool lin_scale = false;
 
 	TString regions[] = {"Baseline", "Search"};
-	TString EW_leg[] = {"VBF", "t#bar{t}", "Diboson"};
+
 
 	// PlotSameAxes(Zmm2jets, 1, centrality, 4, "Zmm",
 	// 				"Zmm2jets Centrality", regions, "Centrality", dont_write,
@@ -193,8 +196,8 @@ void MakeStack() {
 	// PlotSameAxes(EW, 3, ljet_inv_mass_preselect, 1, "EW",
 	// 				EW_leg, "mjj_r10201 [GeV/c^{2}]", dont_write, log_scale);
 
-	PlotStack(EW, 3, ljet_inv_mass_preselect, 1, "EW",
-					EW_leg, "mjj_r10201 [GeV/c^{2}]", dont_write, log_scale);
+	PlotStack(EW_QCD, 2, ljet_inv_mass_search, 1, "EW",
+					EW_QCD_leg, "mjj_r10201 [GeV/c^{2}]", dont_write, log_scale);
 
 	cout << "Stacks made!" << endl;
 	gROOT->SetBatch(kFALSE);
