@@ -3,80 +3,6 @@
 #include <iostream>
 #include "vector"
 
-void AddStack(TString c_name, TString get_hist, TString files[],
-			int file_length, string MC_type, bool norm_hist=false) {
-	TCanvas *c = new TCanvas(c_name);
-	THStack *hs = new THStack(c_name+"_stack","");
-	auto legend = new TLegend(0.75,0.7,0.99,0.99);
-	TString leg_title;
-
-	for (UInt_t i=0;i<file_length;i++){
-		TFile* file = new TFile("OutputFiles/"+files[i]+".root");
-		TH1F* h = (TH1F*)file->Get(get_hist);
-
-		if (norm_hist == true) {
-			Double_t norm = h->GetEntries();
-			h->Scale(1/norm);
-			h->SetLineColor(i+2);
-			leg_title = get_hist+"_norm";
-		}
-		else h->SetFillColor(i+2);
-		leg_title=MC_type+" "+get_hist;
-		hs->Add(h);
-		legend->AddEntry(h,files[i],"f");
-
-	hs->Draw();
-	hs->GetXaxis()->SetTitle(get_hist);
-	hs->GetYaxis()->SetTitle("Counts");
-	gPad->Modified();
-	gPad->Update();
-
-	legend->SetHeader(leg_title,"C");
-	legend->SetTextSize(0.02);
-	legend->Draw();
-	}
-
-	TFile outfile(TString::Format("OutputFiles/Stacked_%s.root",
-									MC_type.c_str()),"UPDATE");
-	c->Write("",TObject::kOverwrite);
-	outfile.Close();
-}
-
-void StackCuts(TString c_name, TString get_hists[], TString file_name,
-				int hists_length, string MC_type, bool norm_hist=false) {
-
-	TCanvas *c = new TCanvas(c_name);
-	THStack *hs = new THStack(c_name+"_stack","");
-	TFile* file = new TFile("OutputFiles/"+file_name+".root");
-	auto legend = new TLegend(0.2, 0.2, .8, .8);
-	TString leg_title;
-
-	for (UInt_t i=0;i<hists_length;i++){
-		TH1F* h;
-		h = (TH1F*)file->Get(get_hists[i]);
-		h->SetLineColor(i+2);
-		leg_title=file_name;
-		hs->Add(h);
-		legend->AddEntry(h,get_hists[i],"f");
-		//h->Reset();
-
-	hs->Draw();
-	hs->GetYaxis()->SetTitle("Counts");
-	gPad->Modified();
-	gPad->Update();
-
-	legend->SetHeader(leg_title,"C");
-	legend->SetTextSize(0.02);
-	legend->Draw();
-	}
-
-	TFile outfile(TString::Format("OutputFiles/Stacked_%s.root",
-									MC_type.c_str()),"UPDATE");
-	c->Write("",TObject::kOverwrite);
-	outfile.Close();
-}
-
-
 void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 					int hists_len, string MC_type, TString legend_entries[],
 					TString axis_title, bool write,	bool log_scale) {
@@ -112,7 +38,7 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 			h->SetLineColor(kBlack);
 			h->SetFillColor(colour);
 			colour += 1;
-			legend->AddEntry(h,legend_entries[i],"l");
+			legend->AddEntry(h,legend_entries[i+j],"l");
 			h->GetYaxis()->SetTitle("Events");
 			h->GetXaxis()->SetTitle(axis_title);
 			if ((i==0) && (j==0)) {
@@ -123,6 +49,54 @@ void PlotSameAxes(TString file_names[],int files_len, TString hists[],
 			else h->Draw("same");
 		}
 	}
+	legend->SetTextFont(42);
+	legend->SetTextSize(0.037);
+	legend->SetBorderSize(0);
+	legend->Draw();
+
+	if (write == true) {
+		TFile outfile(TString::Format("OutputFiles/SameAxes_%s.root",
+						MC_type.c_str()),"UPDATE");
+		c->Write("",TObject::kOverwrite);
+		outfile.Close();
+		}
+}
+
+void PlotStack(TString file_names[],int files_len, TString hists[],
+					int hists_len, string MC_type, TString legend_entries[],
+					TString axis_title, bool write,	bool log_scale) {
+
+	TCanvas *c = new TCanvas(axis_title+"_stack");
+	if (log_scale) c->SetLogy();
+	THStack *hs = new THStack(axis_title+"_stack", "");
+	auto legend = new TLegend(0.74, 0.89, 0.78, 0.8);
+
+	float temp_min=0, temp_max=0;
+	for (UInt_t j=0; j<files_len; j++) {
+		TFile* file = new TFile("OutputFiles/"+file_names[j]+".root");
+		for (UInt_t i=0; i<hists_len; i++) {
+			TH1F* h = (TH1F*)file->Get(hists[i]);
+			if (log_scale) h->SetMinimum(1);
+		}
+	}
+	int colour = 6;
+	for (UInt_t j=0; j<files_len; j++) {
+		TFile* file = new TFile("OutputFiles/"+file_names[j]+".root");
+		for (UInt_t i=0; i<hists_len; i++) {
+			TH1F* h = (TH1F*)file->Get(hists[i]);
+			h->SetStats(kFALSE);
+			h->SetTitle("");
+			h->SetLineColor(kBlack);
+			h->SetFillColor(colour);
+			colour += 1;
+			hs->Add(h);
+			legend->AddEntry(h,legend_entries[i+j],"f");
+		}
+	}
+	hs->Draw();
+	hs->GetYaxis()->SetTitle("Events");
+	hs->GetXaxis()->SetTitle(axis_title);
+
 	legend->SetTextFont(42);
 	legend->SetTextSize(0.037);
 	legend->SetBorderSize(0);
@@ -172,8 +146,9 @@ void MakeStack() {
 	TString Zmm2jets[] = {"Zmm2jets_Min_N_TChannel"};
 	TString Zmumu_MV280_500_CFilBVet[] = {"Zmumu_MV280_500_CFilBVet"};
 	TString Zmumu_MV140_280_CFilBVet[] = {"Zmumu_MV140_280_CFilBVet"};
-	TString EW_jj[] = {"EW_Zll_r10201"};
-	TString EW_Zll[] = {"EW_Zll"};
+	TString VBF[] = {"VBF"};
+	TString VBF_r10201[] = {"VBF_r10201"};
+	TString EW[] = {"VBF_r10201", "ttb_nonallh_r10201", "Diboson"};
 
 	//-------------------------- Histograms -----------------------------//
 	TString ljet_pt[] = {"ljet_0_pt","ljet_1_pt","ljet_2_pt", "ljet_3_pt"};
@@ -200,6 +175,7 @@ void MakeStack() {
 	TString centrality[] = {"Z_cent", "Z_cent_search",
 							"Z_cent_control", "Z_cent_high_mass"};
 	TString ljet_inv_mass[] = {"ljet_inv_mass", "ljet_inv_mass_search"};
+	TString ljet_inv_mass_preselect[] = {"ljet_inv_mass_preselect"};
 	TString ljet_inv_mass_search[] = {"ljet_inv_mass_search"};
 
 	bool write = true;
@@ -208,16 +184,17 @@ void MakeStack() {
 	bool lin_scale = false;
 
 	TString regions[] = {"Baseline", "Search"};
-	TString EW_leg[] = {"EW Zll Search"};
+	TString EW_leg[] = {"VBF", "t#bar{t}", "Diboson"};
 
 	// PlotSameAxes(Zmm2jets, 1, centrality, 4, "Zmm",
 	// 				"Zmm2jets Centrality", regions, "Centrality", dont_write,
 					// line_scale);
 
-	PlotSameAxes(EW_jj, 1, ljet_inv_mass_search, 1, "EW_jj",
+	// PlotSameAxes(EW, 3, ljet_inv_mass_preselect, 1, "EW",
+	// 				EW_leg, "mjj_r10201 [GeV/c^{2}]", dont_write, log_scale);
+
+	PlotStack(EW, 3, ljet_inv_mass_preselect, 1, "EW",
 					EW_leg, "mjj_r10201 [GeV/c^{2}]", dont_write, log_scale);
-
-
 
 	cout << "Stacks made!" << endl;
 	gROOT->SetBatch(kFALSE);
