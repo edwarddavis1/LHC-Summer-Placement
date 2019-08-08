@@ -65,10 +65,11 @@ void PlotStack(TString file_names[],int files_len, TString hists[],
 					int hists_len, string MC_type, TString legend_entries[],
 					TString axis_title, bool write,	bool log_scale) {
 
+	int entries = hists_len + files_len;
 	TCanvas *c = new TCanvas(axis_title+"_stack");
 	if (log_scale) c->SetLogy();
 	THStack *hs = new THStack(axis_title+"_stack", "");
-	auto legend = new TLegend(0.60, 0.89, 0.9, 0.6);
+	auto legend = new TLegend(0.75, 0.89, 0.9, 0.9 - (entries - 1)*0.065);
 
 	float temp_min=0, temp_max=0;
 	for (UInt_t j=0; j<files_len; j++) {
@@ -180,6 +181,7 @@ void MakeStack() {
 	TString ljet_inv_mass[] = {"ljet_inv_mass", "ljet_inv_mass_search"};
 	TString ljet_inv_mass_preselect[] = {"ljet_inv_mass_preselect"};
 	TString ljet_inv_mass_search[] = {"ljet_inv_mass_search"};
+	TString ljet_inv_mass_control[] = {"ljet_inv_mass_control"};
 
 	bool write = true;
 	bool dont_write = false;
@@ -196,8 +198,11 @@ void MakeStack() {
 	// PlotSameAxes(EW, 3, ljet_inv_mass_preselect, 1, "EW",
 	// 				EW_leg, "mjj_r10201 [GeV/c^{2}]", dont_write, log_scale);
 
-	PlotStack(EW_QCD, 2, ljet_inv_mass_search, 1, "EW",
-					EW_QCD_leg, "mjj_r10201 [GeV/c^{2}]", dont_write, log_scale);
+	PlotStack(EW, 4, ljet_inv_mass_search, 1, "EW",
+					EW_leg, "mjj search [GeV/c^{2}]", dont_write, log_scale);
+
+	// PlotStack(EW_QCD, 2, ljet_inv_mass_control, 1, "EW",
+	// 				EW_QCD_leg, "mjj control [GeV/c^{2}]", dont_write, log_scale);
 
 	cout << "Stacks made!" << endl;
 	gROOT->SetBatch(kFALSE);
