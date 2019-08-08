@@ -21,6 +21,7 @@ elif host == "pc2012":
     chain_start = 7
 
 found_dir = None
+subchains = []
 file_paths = []
 chain_names = []
 higgs_lums = []
@@ -32,6 +33,7 @@ second_substring = []
 file_time_total_s = 0
 
 while found_dir is None:
+    subchains[:] = []
     user_input = raw_input("Enter which specific process(es) you want "
                            "to analyse: ")
     user_input = user_input.replace(" ", "")
@@ -42,6 +44,12 @@ while found_dir is None:
     for i in range(len(chains)):
         if chains[i] == "Ztt":
             chains[i] = "Ztt_"
+
+    # Allow for multiple substrings to search for a single chain name if
+    # separated by &
+    for i in range(len(chains)):
+        subchain = chains[i].split("&")
+        subchains.append(subchain)
 
     print("Here's what I found:\n")
 
@@ -56,7 +64,9 @@ while found_dir is None:
         for dirnames in os.walk(MC_path):
             for dirname in dirnames:
                 # prevents the program grabbing the /mc directory
-                if chains[i] in dirname and dirname != MC_path:
+                if subchains[i][0] not in dirname or dirname == MC_path:
+                    break
+                if all(substr in dirname for substr in subchains[i]):
                     found_dir = True
                     for filenames in os.walk(dirname):
 

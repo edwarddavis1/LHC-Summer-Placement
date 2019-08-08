@@ -17,6 +17,7 @@ string convertToString(char* a, int size)
     return s;
 }
 
+
 // gets the name of the pc you're currently logged in to
 string PCName() {
     char hostname[HOST_NAME_MAX];
@@ -32,6 +33,20 @@ bool HiggsTruth() {
     bool higgs = false;
     if (pcname == "higgs") higgs = true;
     return higgs;
+}
+
+bool pc2014Truth() {
+    string pcname = PCName();
+    bool pc2014 = false;
+    if (pcname == "pc2014") pc2014 = true;
+    return pc2014;
+}
+
+bool pc2012Truth() {
+    string pcname = PCName();
+    bool pc2012 = false;
+    if (pcname == "pc2012") pc2012 = true;
+    return pc2012;
 }
 
 vector<string> split(string strToSplit, char delimeter) {
@@ -61,7 +76,7 @@ string ChooseSplit(string strToSplit, char delimeter, int pos,
 
     string chosen_split;
     vector<string> chosen_splits;
-    if (end_pos == pos) end_pos = splittedStrings.size();
+    if (end_pos == pos and pos != 0) end_pos = splittedStrings.size();
 
     if (end_pos == 0) {
         string chosen_split = splittedStrings[pos];
@@ -117,11 +132,14 @@ string ChainName() {
 
 // find out ID of current file
 string GetID() {
-	string file_path = gDirectory->GetPath();
+    bool higgs = HiggsTruth();
+    string file_path = gDirectory->GetPath();
 	vector<string> file_split;
 	char delimeter{'.'};
 	file_split = split(file_path, delimeter);
-	string dataset = file_split[6];
+    string dataset;
+    if (higgs) dataset = file_split[5];
+    else dataset = file_split[6];
 	return dataset;
 }
 
@@ -357,105 +375,92 @@ void MC_Analysis::ParticleSelection() {
 // This function will return a vector of doubles, containing information
 // about luminosity weighting for a given file ID
 vector<double> csv_reader(string ID) {
+// void csv_reader(string ID) {
 
-	// create the various variables to be used
-	string Line, prevLine;
+	string line;
 	vector <double> info;
-	int matchPos = 0;
-	bool counterActive = true;
+    string SampleID_s;
+    string xs_s;
+	string k_s;
+	string e_filter_s;
+    double SampleID;
+	double xs;
+	double k;
+	double e_filter;
+    vector<string> SampleID_v;
 
-	// detect which computer is being used
-	string pcname = PCName();
-
+	bool higgs = HiggsTruth();
+    bool pc2014 = pc2014Truth();
+    bool pc2012 = pc2012Truth();
 	ifstream file;
 
 	// get file contianing luminosity information
-	if (pcname == "higgs") {
+	if (higgs) {
 		file.open("/higgs-data3/sam/forTomRyunAliceLuca/v02/LepUniv_xsec.csv");
-	} else if (pcname == "pc2014") {
+	} else if (pc2014) {
 		file.open("/pc2014-data4/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
-	} else if (pcname == "pc2012") {
+	} else if (pc2012) {
 		file.open("/pc2012-data1/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
 	}
-	getline(file, Line, '\n');  //Get a new line
 
-	while(!file.eof()){  // While not at the end of the file
-		getline(file,Line);  // Get a new line
+    char comma{','};
+    bool is_number;
+    int i = 0;
+    int pos = 0;
+    vector<string> lines;
+    if (file.is_open()) {
+        while(getline(file, line)) {
+            // remove large spaces in csv
+            line.erase(remove_if(line.begin(), line.end(), ::isspace),
+                        line.end());
 
-		// increment the counter if the counter is active
-		if(counterActive) matchPos++;
+            // remove lines without data (without a comma in the line)
+            if (line.find(",") != string::npos) {
+                SampleID_s = ChooseSplit(line, comma, 0);
+                if (ID == SampleID_s) {
+                    stringstream(SampleID_s)>>SampleID;
+                    stringstream(ChooseSplit(line, comma, 2))>>xs;
+                    stringstream(ChooseSplit(line, comma, 3))>>k;
+                    stringstream(ChooseSplit(line, comma, 4))>>e_filter;
+                    break;
+                }
+            }
+        }
+    }
+    file.close();
 
-		// if the ID finds a match for line number, deactivate the counter
-		if( Line.substr(0,6) == ID ) counterActive = false;
-	}
-
-	file.close();
-
-	ifstream file2;
-
-	if (pcname == "higgs") {
-		file2.open("/higgs-data3/sam/forTomRyunAliceLuca/v02/LepUniv_xsec.csv");
-	} else if (pcname == "pc2012") {
-		file2.open("/pc2012-data1/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
-	} else if (pcname == "pc2014") {
-		file2.open("/pc2014-data4/sam/VBF_Ztt/HIGG8D1/LepUniv_xsec.csv");
-	}
-
-	// get lines from the file until it reaches the line with the matched ID
-	for(int i = 0; i < matchPos; i++) getline(file2, Line);
-
-	double SampleID;
-	double xsectioninpb;
-	double kfactor;
-	double filterefficiency;
-	double xsecunc;
-
-	// get the sample ID from the file
-	getline(file2, Line, ',');
-	SampleID = stod(Line);
-	info.push_back(SampleID);
-
-	// get the cross section in picobarns from the file
-	getline(file2, Line, ',');
-	getline(file2, Line, ',');
-	xsectioninpb = stod(Line);
-	info.push_back(xsectioninpb);
-
-	// get the k factor from the file
-	getline(file2, Line, ',');
-	kfactor = stod(Line);
-	info.push_back(kfactor);
-
-	// get the filter efficiency from the file
-	getline(file2, Line, ',');
-	filterefficiency = stod(Line);
-	info.push_back(filterefficiency);
-
-	// get the cross section 'unc' from the file
-	///NO IDEA WHAT THIS IS
-	getline(file2, Line, '\n');
-	xsecunc = stod(Line);
-	info.push_back(xsecunc);
+    info.push_back(SampleID);
+    info.push_back(xs);
+    info.push_back(k);
+    info.push_back(e_filter);
 
 	return info;
 
 }
 
+double GetLuminosity() {
+    bool higgs = HiggsTruth();
+    string chain_name = ChainName();
+	double luminosity;
+	if (higgs) {
+		if (chain_name.find("r9364") != string::npos) luminosity = 36236.9;
+		else if (chain_name.find("r10201") != string::npos) luminosity = 43587.3;
+	}
+	else luminosity = 36236.9;
+
+    return luminosity;
+}
+
 double GetN(string data_path) {
     bool higgs = HiggsTruth();
+    bool pc2014 = pc2014Truth();
+    bool pc2012 = pc2012Truth();
     string chain_name = ChainName();
 
     ifstream N_file;
-    int choice = 1;
-    if (higgs) choice = 0;
-    switch(choice) {
-        case 0:
-           N_file.open("N_values_higgs.txt");
-           break;
-        case 1:
-           N_file.open("N_values.txt");
-           break;
-    }
+    if (higgs) N_file.open("N_values_higgs.txt");
+    else if (pc2014) N_file.open("N_values_pc2014.txt");
+    else if (pc2012) N_file.open("N_values_pc2012.txt");
 
     string line;
     double N;
@@ -485,15 +490,16 @@ double luminosity_weighting_function(vector<double> info, double N,
 
 	double xs = info[1];			// Cross section
 	double k = info[2];				// Correction on cross section calculation
-	double eff_filter = info[3];	// Filtering efficiency
+	double e_filter = info[3];	    // Filtering efficiency
 	double lum_weight;
 
     cout << "cross section: " << xs << endl;
     cout << "k factor: " << k << endl;
-    cout << "eff_filter: " << eff_filter << endl;
+    cout << "e_filter: " << e_filter << endl;
     cout << "N: " << N << endl;
+    cout << "luminosity: " << luminosity << endl;
 
-	lum_weight =  luminosity*(xs*k*eff_filter)/N;
+	lum_weight =  luminosity*(xs*k*e_filter)/N;
     cout << "lum weight: " << lum_weight << endl;
 	return lum_weight;
 
