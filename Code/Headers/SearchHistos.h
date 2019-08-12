@@ -1,12 +1,13 @@
 // --------------------- INVARIANT MASS --------------------- //
-double dilep_inv_mass = InvariantMass(lep_0_p4, lep_1_p4);
+h_lep_inv_mass_search->Fill(dilep_inv_mass);
 if (lep_type == "Electron") {
-    h_elec_inv_mass_search->Fill(dilep_inv_mass);
+    h_elec_inv_mass_search->Fill(dilep_inv_mass, lum_weight);
 } if (lep_type == "Muon") {
-    h_muon_inv_mass_search->Fill(dilep_inv_mass);
+    h_muon_inv_mass_search->Fill(dilep_inv_mass, lum_weight);
 }
+h_ljet_inv_mass_search->Fill(ljet_inv_mass, lum_weight);
+
+h_lep_inv_mass_reco_search->Fill(lep_inv_mass_reco);
 
 // ----------------------- Z BOSON -------------------------- //
-double Z_cent = Centrality(lep_0_p4, lep_1_p4,
-                            ljet_0_p4, ljet_1_p4);
-h_Z_cent_search->Fill(Z_cent);
+h_Z_cent_search->Fill(Z_cent, lum_weight);
