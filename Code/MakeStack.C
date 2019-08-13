@@ -234,8 +234,6 @@ void MakeStack() {
 	//gROOT->SetBatch(kTRUE);
 	cout << "Making stacks..." << endl;
 
-	#include "Headers/TStringHistos.h"
-
 	bool write = true;
 	bool dont_write = false;
 	bool logy_scale = true;
@@ -243,9 +241,124 @@ void MakeStack() {
 	bool logx_scale = true;
 	bool linx_scale = false;
 
+	//-------------------------- Histograms -----------------------------//
+	TString tau_inv_mass_baseline[] = {"tau_inv_mass_baseline"};
+	TString tau_inv_mass_preselect[] = {"tau_inv_mass_preselect"};
+	TString tau_inv_mass_search[] = {"tau_inv_mass_search"};
+	TString tau_inv_mass_control[] = {"tau_inv_mass_control"};
+	TString tau_inv_mass_highmass[] = {"tau_inv_mass_highmass"};
+	TString tau_inv_mass_reco_baseline[] = {"tau_inv_mass_reco_baseline"};
+	TString tau_inv_mass_reco_preselect[] = {"tau_inv_mass_reco_preselect"};
+	TString tau_inv_mass_reco_search[] = {"tau_inv_mass_reco_search"};
+	TString tau_inv_mass_reco_control[] = {"tau_inv_mass_reco_control"};
+	TString tau_inv_mass_reco_highmass[] = {"tau_inv_mass_reco_highmass"};
+	TString ljet_inv_mass_preselect[] = {"ljet_inv_mass_preselect"};
+	TString ljet_inv_mass_baseline[] = {"ljet_inv_mass_baseline"};
+	TString ljet_inv_mass_search[] = {"ljet_inv_mass_search"};
+	TString ljet_inv_mass_control[] = {"ljet_inv_mass_control"};
+	TString ljet_inv_mass_highmass[] = {"ljet_inv_mass_highmass"};
+	TString tau_pt_balance_reco_baseline[] = {"tau_pt_balance_reco_baseline"};
+	TString tau_pt_balance_reco_preselect[] = {"tau_pt_balance_reco_preselect"};
+	TString tau_pt_balance_reco_search[] = {"tau_pt_balance_reco_search"};
+	TString tau_pt_balance_reco_control[] = {"tau_pt_balance_reco_control"};
+	TString tau_pt_balance_reco_highmass[] = {"tau_pt_balance_reco_highmass"};
+	TString lep_no_preselect[] = {"lep_no_preselect"};
+	TString lep_inv_mass_preselect[] = {"lep_inv_mass_preselect"};
+	TString lep_inv_mass_baseline[] = {"lep_inv_mass_baseline"};
+	TString lep_inv_mass_search[] = {"lep_inv_mass_search"};
+	TString lep_inv_mass_control[] = {"lep_inv_mass_control"};
+	TString lep_inv_mass_highmass[] = {"lep_inv_mass_highmass"};
+	TString lep_inv_mass_reco_preselect[] = {"lep_inv_mass_reco_preselect"};
+	TString lep_inv_mass_reco_baseline[] = {"lep_inv_mass_reco_baseline"};
+	TString lep_inv_mass_reco_search[] = {"lep_inv_mass_reco_search"};
+	TString lep_inv_mass_reco_control[] = {"lep_inv_mass_reco_control"};
+	TString lep_inv_mass_reco_highmass[] = {"lep_inv_mass_reco_highmass"};
+	TString elec_inv_mass_baseline[] = {"elec_inv_mass_baseline"};
+	TString muon_inv_mass_baseline[] = {"muon_inv_mass_baseline"};
+	TString elec_inv_mass_preselect[] = {"elec_inv_mass_preselect"};
+	TString muon_inv_mass_preselect[] = {"muon_inv_mass_preselect"};
+	TString elec_inv_mass_search[] = {"elec_inv_mass_search"};
+	TString muon_inv_mass_search[] = {"muon_inv_mass_search"};
+	TString elec_inv_mass_control[] = {"elec_inv_mass_control"};
+	TString muon_inv_mass_control[] = {"muon_inv_mass_control"};
+	TString elec_inv_mass_highmass[] = {"elec_inv_mass_highmass"};
+	TString muon_inv_mass_highmass[] = {"muon_inv_mass_highmass"};
+	TString elec_0_iso_etcone20_baseline[] = {"elec_0_iso_etcone20_baseline"};
+	TString muon_0_iso_etcone20_baseline[] = {"muon_0_iso_etcone20_baseline"};
+	TString elec_0_iso_ptcone30_baseline[] = {"elec_0_iso_ptcone30_baseline"};
+	TString muon_0_iso_ptcone30_baseline[] = {"muon_0_iso_ptcone30_baseline"};
+	TString n_jets_preselect[] = {"n_jets_preselect"};
+	TString ljet_0_pt_baseline[] = {"ljet_0_pt_baseline"};
+	TString ljet_0_eta_baseline[] = {"ljet_0_eta_baseline"};
+	TString ljet_0_phi_baseline[] = {"ljet_0_phi_baseline"};
+	TString ljet_1_pt_baseline[] = {"ljet_1_pt_baseline"};
+	TString ljet_1_eta_baseline[] = {"ljet_1_eta_baseline"};
+	TString ljet_1_phi_baseline[] = {"ljet_1_phi_baseline"};
+	TString bjet_0_pt_baseline[] = {"bjet_0_pt_baseline"};
+	TString bjet_0_eta_baseline[] = {"bjet_0_eta_baseline"};
+	TString bjet_0_phi_baseline[] = {"bjet_0_phi_baseline"};
+	TString bjet_inv_mass_baseline[] = {"bjet_inv_mass_baseline"};
+	TString lep_0_pt_baseline[] = {"lep_0_pt_baseline"};
+	TString lep_0_eta_baseline[] = {"lep_0_eta_baseline"};
+	TString lep_0_phi_baseline[] = {"lep_0_phi_baseline"};
+	TString lep_1_pt_baseline[] = {"lep_1_pt_baseline"};
+	TString lep_1_eta_baseline[] = {"lep_1_eta_baseline"};
+	TString lep_1_phi_baseline[] = {"lep_1_phi_baseline"};
+	TString Z_centrality_baseline[] = {"Z_centrality_baseline"};
+	TString Z_centrality_preselect[] = {"Z_centrality_preselect"};
+	TString Z_centrality_search[] = {"Z_centrality_search"};
+	TString Z_centrality_control[] = {"Z_centrality_control"};
+	TString Z_centrality_highmass[] = {"Z_centrality_highmass"};
+	TString ljet_delta_eta_baseline[] = {"ljet_delta_eta_baseline"};
+	TString ljet_delta_eta_preselect[] = {"ljet_delta_eta_preselect"};
+	TString ljet_delta_phi[] = {"ljet_delta_phi"};
+	TString ljet_delta_R[] = {"ljet_delta_R"};
+	TString ljet_delta_phi_preselect[] = {"ljet_delta_phi_preselect"};
+	TString ljet_delta_R_preselect[] = {"ljet_delta_R_preselect"};
+	TString lep_delta_eta_baseline[] = {"lep_delta_eta_baseline"};
+	TString lep_delta_phi_baseline[] = {"lep_delta_phi_baseline"};
+	TString lep_delta_R_baseline[] = {"lep_delta_R_baseline"};
+	TString lep_delta_eta_preselect[] = {"lep_delta_eta_preselect"};
+	TString lep_delta_phi_preselect[] = {"lep_delta_phi_preselect"};
+	TString lep_delta_R_preselect[] = {"lep_delta_R_preselect"};
+	TString lep_0_rapidity_baseline[] = {"lep_0_rapidity_baseline"};
+	TString lep_eta_L_SL_preselect[] = {"lep_eta_L_SL_preselect"};
+	TString ljet_eta_L_SL_preselect[] = {"ljet_eta_L_SL_preselect"};
+	TString ljet_eta_L_SL_2jets_preselect[] = {"ljet_eta_L_SL_2jets_preselect"};
+	TString lep_phi_L_SL_preselect[] = {"lep_phi_L_SL_preselect"};
+	TString ljet_phi_L_SL_preselect[] = {"ljet_phi_L_SL_preselect"};
+	TString ljet_2_pt_baseline[] = {"ljet_2_pt_baseline"};
+	TString ljet_3_pt_baseline[] = {"ljet_3_pt_baseline"};
+	TString ljet_2_eta_baseline[] = {"ljet_2_eta_baseline"};
+	TString ljet_3_eta_baseline[] = {"ljet_3_eta_baseline"};
+	TString ljet_2_phi_baseline[] = {"ljet_2_phi_baseline"};
+	TString ljet_3_phi_baseline[] = {"ljet_3_phi_baseline"};
+	TString lep_eta_sum_baseline[] = {"lep_eta_sum_baseline"};
+	TString ljet_eta_sum_baseline[] = {"ljet_eta_sum_baseline"};
+	TString ljet_2_delta_eta_baseline[] = {"ljet_2_delta_eta_baseline"};
+	TString ljet_3_delta_eta_baseline[] = {"ljet_3_delta_eta_baseline"};
+	TString ljet_0_eta_2jets_baseline[] = {"ljet_0_eta_2jets_baseline"};
+	TString ljet_1_eta_2jets_baseline[] = {"ljet_1_eta_2jets_baseline"};
+	TString ljet_2_eta_2jets_baseline[] = {"ljet_2_eta_2jets_baseline"};
+	TString ljet_3_eta_2jets_baseline[] = {"ljet_3_eta_2jets_baseline"};
+	TString ljet_0_eta_3jets_baseline[] = {"ljet_0_eta_3jets_baseline"};
+	TString ljet_1_eta_3jets_baseline[] = {"ljet_1_eta_3jets_baseline"};
+	TString ljet_2_eta_3jets_baseline[] = {"ljet_2_eta_3jets_baseline"};
+	TString ljet_3_eta_3jets_baseline[] = {"ljet_3_eta_3jets_baseline"};
+	TString ljet_0_eta_4jets_baseline[] = {"ljet_0_eta_4jets_baseline"};
+	TString ljet_1_eta_4jets_baseline[] = {"ljet_1_eta_4jets_baseline"};
+	TString ljet_2_eta_4jets_baseline[] = {"ljet_2_eta_4jets_baseline"};
+	TString ljet_3_eta_4jets_baseline[] = {"ljet_3_eta_4jets_baseline"};
+	TString ljet_0_eta_5jets_baseline[] = {"ljet_0_eta_5jets_baseline"};
+	TString ljet_1_eta_5jets_baseline[] = {"ljet_1_eta_5jets_baseline"};
+	TString ljet_2_eta_5jets_baseline[] = {"ljet_2_eta_5jets_baseline"};
+	TString ljet_3_eta_5jets_baseline[] = {"ljet_3_eta_5jets_baseline"};
+	TString lep_pt_balance_baseline[] = {"lep_pt_balance_baseline"};
+	TString delta_eta_pt_ll_baseline[] = {"delta_eta_pt_ll_baseline"};
+	TString delta_phi_pt_ll_baseline[] = {"delta_phi_pt_ll_baseline"};
 
 	//---------------------------- Files --------------------------------//
-	TString VBF[] = {"Zmm2jets_Min_N_TChannel_r10201",
+	TString Zmm2jets[] = {"Zmm2jets_Min_N_TChannel_r10201",
 							"Zee2jets_Min_N_TChannel_r10201",
 							"Ztt2jets_Min_N_TChannel_r10201"};
 	TString Zlls[] = {"Zmm2jets_Min_N_TChannel_r10201", "Zmumu"};
@@ -264,7 +377,7 @@ void MakeStack() {
 							"Wtaunu", "Wmunu", "Wenu",
 							"ZqqZll",
 							"EW Zll",
-						 	"QCD Zll"};
+							"QCD Zll"};
 
 	TString all_processes[] = {"ttb_nonallh_r10201",
 						"lvvv_r10201", "llvv_r10201",
@@ -286,17 +399,16 @@ void MakeStack() {
 						"EW Ztt",
 						"QCD Zmumu", "QCD Zee", "QCD Ztt"};
 
-	//-------------------------- Histograms -----------------------------//
 	TString EW_QCD_test[] = {"VBF_r9364", "VBF_r10201", "Zll_QCD"};
 
 	TString QCD_Zll[] = {"Zmumu", "Zee", "Ztt"};
 	TString regions[] = {"Control", "Search", "Baseline", "Pre-Select"};
 
-	TString ljet_inv_mass_search = {"ljet_inv_mass_search"};
 
-	PlotStack(VBF, 1, ljet_inv_mass_search, 1,
-					VBF, "mll [GeV/c^{2}]", "Pre-Selection",
+	PlotStack(all_processes, 15, lep_inv_mass_preselect, 1,
+					all_processes_leg, "mll [GeV/c^{2}]", "Pre-Selection",
 					linx_scale, logy_scale);
+
 
 
 	cout << "Stacks made!" << endl;
