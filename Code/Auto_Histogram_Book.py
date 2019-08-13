@@ -1,12 +1,25 @@
-# def WriteHisto(files, info):
-#     particles = [row[0] for row in info]
-#     variables = [row[1] for row in info]
-#     regions = [row[2] for row in info]
-#     if region == 'preselect':
-#         file.write('h_%s_%s_%s -> Fill(%s)\n' % (particles[i],
-#                                                  variables[i],
-#                                                  regions[i],
-#                                                  variables[i]))
+def RemoveFromString(string, substring, delimeter):
+    if ',' in string:
+        strings = string.split(',')
+    else:
+        strings = [string]
+
+    new_strings = []
+    for str in strings:
+        str = str.strip()
+        if substring in str:
+            split_str = str.split(delimeter)
+            counts = str.count(substring)
+            for i in range(counts):
+                split_str.remove(substring)
+                new_strings.append(delimeter.join(split_str))
+
+        else:
+            new_strings.append(str)
+
+    new_string = ', '.join(new_strings)
+
+    return new_string
 
 
 def UpdateWrite():
@@ -88,52 +101,81 @@ def UpdateWrite():
         for file in files:
             file.write('// general leptons\n')
         for i in range(particles.count('lep')):
+
+            if 'L_SL' in variables[i]:
+                split_variable = variables[i].split('_')
+                split_variable.remove('L')
+                split_variable.remove('SL')
+                split_variable.remove(particles[i])
+                new_variable = '_'.join(split_variable)
+                fill1 = (particles[i] + "_0_" + new_variable).strip('_')
+                fill2 = (particles[i] + "_1_" + new_variable).strip('_')
+                fill = (fill1 + ', ' + fill2)
+            else:
+                fill = variables[i]
+
             if regions[i] == 'preselect':
-                preselect.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                           regions[i],
-                                                           variables[i]))
+                preselect.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                            regions[i],
+                                                            fill))
             if regions[i] == 'baseline':
-                baseline.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                          regions[i],
-                                                          variables[i]))
+                baseline.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                           regions[i],
+                                                           fill))
             if regions[i] == 'search':
-                search.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                        regions[i],
-                                                        variables[i]))
-            if regions[i] == 'control':
-                control.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
+                search.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                          regions[i],
-                                                         variables[i]))
-            if regions[i] == 'highmass':
-                highmass.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
+                                                         fill))
+            if regions[i] == 'control':
+                control.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                           regions[i],
-                                                          variables[i]))
+                                                          fill))
+            if regions[i] == 'highmass':
+                highmass.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                           regions[i],
+                                                           fill))
         filled = i + 1
         # ----------------------- FILL ELECTRONS ---------------------------- #
         for file in files:
             file.write('\n// electrons\n')
             file.write('if (lep_type == "Electron") {\n')
         for i in range(filled, filled + particles.count('elec')):
+
+            if 'L_SL' in variables[i]:
+                split_variable = variables[i].split('_')
+                split_variable.remove('L')
+                split_variable.remove('SL')
+                split_variable.remove(particles[i])
+                new_variable = '_'.join(split_variable)
+                fill1 = (particles[i] + "_0_" + new_variable).strip('_')
+                fill2 = (particles[i] + "_1_" + new_variable).strip('_')
+                fill = (fill1 + ', ' + fill2)
+            else:
+                fill = variables[i]
+
+            if 'cone' not in fill:
+                fill = fill.replace('elec', 'lep')
+
             if regions[i] == 'preselect':
-                preselect.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                               regions[i],
-                                                               variables[i]))
+                preselect.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                                regions[i],
+                                                                fill))
             if regions[i] == 'baseline':
-                baseline.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                              regions[i],
-                                                              variables[i]))
+                baseline.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                               regions[i],
+                                                               fill))
             if regions[i] == 'search':
-                search.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                            regions[i],
-                                                            variables[i]))
-            if regions[i] == 'control':
-                control.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
+                search.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                              regions[i],
-                                                             variables[i]))
-            if regions[i] == 'highmass':
-                highmass.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
+                                                             fill))
+            if regions[i] == 'control':
+                control.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                               regions[i],
-                                                              variables[i]))
+                                                              fill))
+            if regions[i] == 'highmass':
+                highmass.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                               regions[i],
+                                                               fill))
         for file in files:
             file.write('}\n')
 
@@ -144,26 +186,42 @@ def UpdateWrite():
             file.write('\n// muons\n')
             file.write('if (lep_type == "Muon") {\n')
         for i in range(filled, filled + particles.count('muon')):
+
+            if 'L_SL' in variables[i]:
+                split_variable = variables[i].split('_')
+                split_variable.remove('L')
+                split_variable.remove('SL')
+                split_variable.remove(particles[i])
+                new_variable = '_'.join(split_variable)
+                fill1 = (particles[i] + "_0_" + new_variable).strip('_')
+                fill2 = (particles[i] + "_1_" + new_variable).strip('_')
+                fill = (fill1 + ', ' + fill2)
+            else:
+                fill = variables[i]
+
+            if 'cone' not in fill:
+                fill = fill.replace('muon', 'lep')
+
             if regions[i] == 'preselect':
-                preselect.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                               regions[i],
-                                                               variables[i]))
+                preselect.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                                regions[i],
+                                                                fill))
             if regions[i] == 'baseline':
-                baseline.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                              regions[i],
-                                                              variables[i]))
+                baseline.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                               regions[i],
+                                                               fill))
             if regions[i] == 'search':
-                search.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                            regions[i],
-                                                            variables[i]))
-            if regions[i] == 'control':
-                control.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
+                search.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                              regions[i],
-                                                             variables[i]))
-            if regions[i] == 'highmass':
-                highmass.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
+                                                             fill))
+            if regions[i] == 'control':
+                control.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                               regions[i],
-                                                              variables[i]))
+                                                              fill))
+            if regions[i] == 'highmass':
+                highmass.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                               regions[i],
+                                                               fill))
         for file in files:
             file.write('}\n')
 
@@ -174,26 +232,41 @@ def UpdateWrite():
             file.write('if (lep_type == "ElectronTau" or lep_type == "MuonTau"\n'
                        + '    or lep_type == "ElectronMuon") {\n')
         for i in range(filled + 1, filled + particles.count('tau')):
+
+            if 'L_SL' in variables[i]:
+                split_variable = variables[i].split('_')
+                split_variable.remove('L')
+                split_variable.remove('SL')
+                split_variable.remove(particles[i])
+                new_variable = '_'.join(split_variable)
+                fill1 = (particles[i] + "_0_" + new_variable).strip('_')
+                fill2 = (particles[i] + "_1_" + new_variable).strip('_')
+                fill = (fill1 + ', ' + fill2)
+            else:
+                fill = variables[i]
+
+            fill = fill.replace('tau', 'lep')
+
             if regions[i] == 'preselect':
-                preselect.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                               regions[i],
-                                                               variables[i]))
+                preselect.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                                regions[i],
+                                                                fill))
             if regions[i] == 'baseline':
-                baseline.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                              regions[i],
-                                                              variables[i]))
+                baseline.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                               regions[i],
+                                                               fill))
             if regions[i] == 'search':
-                search.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                            regions[i],
-                                                            variables[i]))
-            if regions[i] == 'control':
-                control.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
+                search.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                              regions[i],
-                                                             variables[i]))
-            if regions[i] == 'highmass':
-                highmass.write('    h_%s_%s -> Fill(%s)\n' % (variables[i],
+                                                             fill))
+            if regions[i] == 'control':
+                control.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                               regions[i],
-                                                              variables[i]))
+                                                              fill))
+            if regions[i] == 'highmass':
+                highmass.write('    h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                               regions[i],
+                                                               fill))
         for file in files:
             file.write('}\n')
 
@@ -204,16 +277,31 @@ def UpdateWrite():
         for file in files:
             file.write('\n// ljets\n')
         for i in range(filled + 1, filled + particles.count('ljet')):
-            print(variables[i])
+
+            if 'L_SL' in variables[i]:
+                split_variable = variables[i].split('_')
+                split_variable.remove('L')
+                split_variable.remove('SL')
+                split_variable.remove(particles[i])
+                new_variable = '_'.join(split_variable)
+                fill1 = (particles[i] + "_0_" + new_variable).strip('_')
+                fill2 = (particles[i] + "_1_" + new_variable).strip('_')
+                fill = (fill1 + ', ' + fill2)
+            else:
+                fill = variables[i]
 
             if '2jets' in variables[i]:
                 condition = 'n_jets == 2'
+                fill = RemoveFromString(fill, '2jets', '_')
             elif '3jets' in variables[i]:
                 condition = 'n_jets == 3'
+                fill = RemoveFromString(fill, '3jets', '_')
             elif '4jets' in variables[i]:
                 condition = 'n_jets == 4'
+                fill = RemoveFromString(fill, '4jets', '_')
             elif '5jets' in variables[i]:
                 condition = 'n_jets == 5'
+                fill = RemoveFromString(fill, '5jets', '_')
             elif 'ljet_3' in variables[i]:
                 condition = 'ljet_3'
             elif 'ljet_2' in variables[i]:
@@ -224,33 +312,33 @@ def UpdateWrite():
             if regions[i] == 'preselect':
                 if condition is not None:
                     preselect.write('if (%s) ' % condition)
-                preselect.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                           regions[i],
-                                                           variables[i]))
+                preselect.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                            regions[i],
+                                                            fill))
             if regions[i] == 'baseline':
                 if condition is not None:
                     baseline.write('if (%s) ' % condition)
-                baseline.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                          regions[i],
-                                                          variables[i]))
+                baseline.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                           regions[i],
+                                                           fill))
             if regions[i] == 'search':
                 if condition is not None:
                     search.write('if (%s) ' % condition)
-                search.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                        regions[i],
-                                                        variables[i]))
+                search.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                         regions[i],
+                                                         fill))
             if regions[i] == 'control':
                 if condition is not None:
                     control.write('if (%s) ' % condition)
-                control.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                         regions[i],
-                                                         variables[i]))
+                control.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                          regions[i],
+                                                          fill))
             if regions[i] == 'highmass':
                 if condition is not None:
                     highmass.write('if (%s) ' % condition)
-                highmass.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                          regions[i],
-                                                          variables[i]))
+                highmass.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                           regions[i],
+                                                           fill))
 
         filled = i + 1
 
@@ -259,25 +347,25 @@ def UpdateWrite():
             file.write('\n// bjets\n')
         for i in range(filled + 1, filled + particles.count('bjet')):
             if regions[i] == 'preselect':
-                preselect.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
+                preselect.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                            regions[i],
+                                                            variables[i]))
+            if regions[i] == 'baseline':
+                baseline.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                            regions[i],
                                                            variables[i]))
-            if regions[i] == 'baseline':
-                baseline.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                          regions[i],
-                                                          variables[i]))
             if regions[i] == 'search':
-                search.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                        regions[i],
-                                                        variables[i]))
-            if regions[i] == 'control':
-                control.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
+                search.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                          regions[i],
                                                          variables[i]))
-            if regions[i] == 'highmass':
-                highmass.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
+            if regions[i] == 'control':
+                control.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                           regions[i],
                                                           variables[i]))
+            if regions[i] == 'highmass':
+                highmass.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                           regions[i],
+                                                           variables[i]))
 
         filled = i + 1
 
@@ -286,25 +374,25 @@ def UpdateWrite():
             file.write('\n// Z\n')
         for i in range(filled + 1, filled + particles.count('Z')):
             if regions[i] == 'preselect':
-                preselect.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
+                preselect.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                            regions[i],
+                                                            variables[i]))
+            if regions[i] == 'baseline':
+                baseline.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                            regions[i],
                                                            variables[i]))
-            if regions[i] == 'baseline':
-                baseline.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                          regions[i],
-                                                          variables[i]))
             if regions[i] == 'search':
-                search.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
-                                                        regions[i],
-                                                        variables[i]))
-            if regions[i] == 'control':
-                control.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
+                search.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                          regions[i],
                                                          variables[i]))
-            if regions[i] == 'highmass':
-                highmass.write('h_%s_%s -> Fill(%s)\n' % (variables[i],
+            if regions[i] == 'control':
+                control.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
                                                           regions[i],
                                                           variables[i]))
+            if regions[i] == 'highmass':
+                highmass.write('h_%s_%s -> Fill(%s);\n' % (variables[i],
+                                                           regions[i],
+                                                           variables[i]))
 
         filled = i + 1
 
