@@ -219,14 +219,16 @@ void PlotStack(TString file_names[],int files_len, TString hists[],
 
 	// calculate percentages
 	cout << "\nComposition of " << region << " Region:" << endl;
-	for (int i = 0; i < hist_entries.size(); i++) {
-		double percentage;
+	if (sum_hist_entries != 0) {
+		for (int i = 0; i < hist_entries.size(); i++) {
+			double percentage;
 
-		percentage = 100 * ((double)hist_entries[i] / (double)sum_hist_entries);
-    	cout << setprecision(3);
-		cout << legend_entries[i] << ": " << percentage << " %" << endl;
+			percentage = 100 * ((double)hist_entries[i] / (double)sum_hist_entries);
+	    	cout << setprecision(3);
+			cout << legend_entries[i] << ": " << percentage << " %" << endl;
+		}
 	}
-
+	else cout << "could not calculate! No entries at all!" << endl;
 
 }
 
@@ -358,6 +360,19 @@ void MakeStack() {
 	TString delta_phi_pt_ll_baseline[] = {"delta_phi_pt_ll_baseline"};
 
 	//---------------------------- Files --------------------------------//
+	TString ttb[] = {"ttb_nonallh_r10201"};
+	TString lvvv[] = {"lvvv_r10201"};
+	TString llvv[] = {"llvv_r10201"};
+	TString lllv[] = {"lllv_r10201"};
+	TString llll[] = {"llll_r10201"};
+	TString Wtaunu[] = {"Wtaunu"};
+	TString Wmunu[] = {"Wmunu"};
+	TString Wenu[] = {"Wenu"};
+	TString ZqqZll[] = {"ZqqZll_r10201"};
+	TString Zee[] = {"Zee"};
+	TString Zmumu[] = {"Zmumu"};
+	TString Ztt[] = {"Ztt"};
+
 	TString Zmm2jets[] = {"Zmm2jets_Min_N_TChannel_r10201",
 							"Zee2jets_Min_N_TChannel_r10201",
 							"Ztt2jets_Min_N_TChannel_r10201"};
@@ -399,15 +414,27 @@ void MakeStack() {
 						"EW Ztt",
 						"QCD Zmumu", "QCD Zee", "QCD Ztt"};
 
-	TString EW_QCD_test[] = {"VBF_r9364", "VBF_r10201", "Zll_QCD"};
+	TString test[] = {"ttb_nonallh_r10201", "VBF"};
+	TString test_leg[] = {"t#bar{t}", "VBF"};
 
 	TString QCD_Zll[] = {"Zmumu", "Zee", "Ztt"};
 	TString regions[] = {"Control", "Search", "Baseline", "Pre-Select"};
 
+	// PlotStack(all_processes, 15, tau_pt_balance_reco_search, 1,
+	// 				all_processes_leg, "mll [GeV/c^{2}]", "Search",
+	// 				linx_scale, logy_scale);
 
-	PlotStack(all_processes, 15, lep_inv_mass_preselect, 1,
-					all_processes_leg, "mll [GeV/c^{2}]", "Pre-Selection",
-					linx_scale, logy_scale);
+	// PlotStack(EW_QCD, 11, tau_inv_mass_preselect, 1,
+	// 			EW_QCD_leg, "mll [GeV/c^{2}]", "Pre-Selection",
+	// 			linx_scale, logy_scale);
+	// PlotStack(EW_QCD, 11, tau_inv_mass_control, 1,
+	// 			EW_QCD_leg, "mll [GeV/c^{2}]", "Control",
+	// 			linx_scale, logy_scale);
+
+	PlotStack(test, 2, tau_inv_mass_preselect, 1,
+				, "mll [GeV/c^{2}]", "Pre-Selection",
+				linx_scale, logy_scale);
+
 
 
 
