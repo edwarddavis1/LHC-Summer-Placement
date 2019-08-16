@@ -3,6 +3,44 @@ import os
 from subprocess import PIPE, Popen
 import datetime
 
+
+def SumHistograms(chain_names, sum_name, single_sim):
+    print("\nSumming Histograms...")
+
+    # store the histograms from the first seciton of data in a list
+    totHist = []
+    if single_sim is False:
+        sec0 = r.TFile("OutputFiles/%s.root" % chain_names[0])
+    else:
+        sec0 = r.TFile("OutputFiles/IndividualHistograms/%s" %
+                       chain_names[0])
+    key0 = sec0.GetListOfKeys()
+    for j in range(len(key0)):
+        totHist.append(sec0.Get(key0[j].GetName()))
+
+    for i in range(1, len(chain_names)):
+        if single_sim is False:
+            secFile = r.TFile("OutputFiles/%s.root" % chain_names[i])
+        else:
+            secFile = r.TFile("OutputFiles/IndividualHistograms/%s" %
+                              chain_names[i])
+        keys = secFile.GetListOfKeys()
+
+        # loop over histograms in the file and add them cumulatively
+        for j in range(len(keys)):
+            totHist[j].Add(secFile.Get(keys[j].GetName()))
+        if single_sim is False:
+            totFile = r.TFile("OutputFiles/%s.root" % sum_name, "RECREATE")
+        else:
+            totFile = r.TFile("OutputFiles/%s.root" %
+                              sum_name, "RECREATE")
+        for hist in totHist:
+            hist.Write()
+        totFile.Close()
+
+    print("Sum %s Complete!" % sum_name)
+
+
 # Gets the name of the host (the computer you are ssh'ing to)
 proc = Popen(['hostname'], stdout=PIPE)
 host_full = proc.communicate()[0].split()[0]
@@ -24,7 +62,8 @@ elif host == "pc2012":
     chain_start = 7
 
 found_dir = None
-subchains = []
+subchains = []              # List of input strings that are separeted by '&'
+hist_paths = []             # Contains all histograms for a given chain
 file_paths = []
 chain_names = []
 higgs_lums = []
@@ -69,27 +108,44 @@ while found_dir is None:
                 # prevents the program grabbing the /mc directory
                 if subchains[i][0] not in dirname or dirname == MC_path:
                     break
+                # if all the strings separated by '&' are present in a single
+                # directoy name
                 if all(substr in dirname for substr in subchains[i]):
                     found_dir = True
                     for filenames in os.walk(dirname):
 
-                        filename = filenames[2][0]
-                        file_path = dirname + "/" + filename
+                        dir_path = filenames[0]         # Path to MC directory
 
-                        chain_name = "_".join(file_path.split(
+                        # list of histograms within the MC directory
+                        hist_files = filenames[2]
+
+                        # get all the paths to all the histograms
+                        # file sizes = sum of histogram sizes
+                        file_size = 0
+                        del hist_paths[:]
+                        for hist_file in hist_files:
+                            hist_path = dir_path + "/" + hist_file
+                            hist_paths.append(hist_path)
+                            # get size of the file (file = all the hists)
+                            file_size += os.path.getsize(hist_path) / 1e9
+
+                        # file_paths didn't append the hist_paths array
+                        # properly so done this as a bodge
+                        hists_str = ','.join(hist_paths)
+
+                        chain_name = "_".join(dir_path.split(
                             ".")[chain_start].split("_")[2:])
 
                         # Fixes bug where some chains were missed
                         if chain_name == "":
-                            chain_name = "_".join(file_path.split(
+                            chain_name = "_".join(dir_path.split(
                                 ".")[chain_start].split("_")[1:])
 
                         if host == 'higgs':
-                            higgs_lum_line = file_path.split(".")[8]
+                            higgs_lum_line = dir_path.split(".")[8]
                             higgs_lum = higgs_lum_line.split("_")[2]
                             chain_name = "_".join([chain_name, higgs_lum])
 
-                        file_size = os.path.getsize(file_path) / 1e9
                         file_exist = os.path.exists(
                             "OutputFiles/" + chain_name + ".root")
                         if file_exist is True:
@@ -119,7 +175,7 @@ while found_dir is None:
                         print('{:35s} {:.2f} GB	{:13} {}'.format(
                             chain_name, file_size, file_time,
                             file_last_run))
-                        file_paths.append(file_path)
+                        file_paths.append(hists_str)
                         chain_names.append(chain_name)
                         file_sizes.append(file_size)
                         files_analysed.append(file_exist)
@@ -129,11 +185,10 @@ while found_dir is None:
             print("I'm sorry, I couldn't find a matching simulation to %s!" %
                   chains[i])
 
-
 file_time_total_m = int(round(file_time_total_s / 60))
 file_time_total_s = file_time_total_s - file_time_total_m * 60
 print("\nI found %i simulations, total time: %i min %i sec\n" %
-      (len(file_paths), file_time_total_m, file_time_total_s))
+      (len(chain_names), file_time_total_m, file_time_total_s))
 run_analysis = False
 run_sum = False
 run_stack = False
@@ -198,28 +253,47 @@ if run_analysis is True:
         print("Analysing {}	{}, ({}/{})".format(chain_names[i], file_times[i],
                                                 i + 1, len(file_paths)))
 
-        file_last_run = str(datetime.datetime.now().strftime("%m-%d %H:%M"))
+        file_last_run = str(
+            datetime.datetime.now().strftime("%m-%d %H:%M"))
         files_last_run.append(file_last_run)
 
-        r.gROOT.Reset()
-        r.gROOT.SetBatch(True)
-        r.gROOT.ProcessLine(".L MC_Analysis.C")
-        r.gROOT.ProcessLine('TFile *file_%s = new TFile("%s")' %
-                            (chain_names[i], file_paths[i]))
-        r.gROOT.ProcessLine("TTree *tree_%s = new TTree" % chain_names[i])
-        # "NOMINAL" is the object got by the new tree from the file
-        r.gROOT.ProcessLine('file_%s->GetObject("NOMINAL",tree_%s)' %
-                            (chain_names[i], chain_names[i]))
-        r.gROOT.ProcessLine(
-            "MC_Analysis* t_%s = new MC_Analysis(tree_%s)" % (chain_names[i],
-                                                              chain_names[i]))
-        r.gROOT.ProcessLine("t_%s->Loop()" % chain_names[i])
+        hists_analysed = 0
+        hist_paths = file_paths[i].split(',')
 
-        if run_sum is True:
-            os.system("mv outfile.root OutputFiles/%s.root" % chain_names[i])
-        if run_sum is False:
-            os.system("mv outfile.root OutputFiles/%s.root" % chain_names[i])
+        hist_storenames = []
+        for hist_path in hist_paths:
+            # file name in the MC directory
+            hist_filename = hist_path.split('/')[-1]
+            # file name to be stored as
+            hist_storename = chain_names[i] + '_' + hist_filename
+            hist_storenames.append(hist_storename)
 
+            hists_analysed += 1
+            total_hists = len(hist_paths)
+            print("    Analysing histogram %s/%s" % (hists_analysed,
+                                                     total_hists))
+
+            r.gROOT.Reset()
+            r.gROOT.SetBatch(True)
+            r.gROOT.ProcessLine(".L MC_Analysis.C")
+            r.gROOT.ProcessLine('TFile *file_%s = new TFile("%s")' %
+                                (chain_names[i], hist_path))
+            r.gROOT.ProcessLine("TTree *tree_%s = new TTree" % chain_names[i])
+            # "NOMINAL" is the object got by the new tree from the file
+            r.gROOT.ProcessLine('file_%s->GetObject("NOMINAL",tree_%s)' %
+                                (chain_names[i], chain_names[i]))
+            r.gROOT.ProcessLine(
+                "MC_Analysis* t_%s = new MC_Analysis(tree_%s)" % (chain_names[i],
+                                                                  chain_names[i]))
+            r.gROOT.ProcessLine("t_%s->Loop()" % chain_names[i])
+
+            os.system("mv outfile.root OutputFiles/IndividualHistograms"
+                      "/%s" % hist_storename)
+
+            if hist_path == hist_paths[-1]:
+                SumHistograms(hist_storenames, chain_names[i], single_sim=True)
+
+        # records the process time if the process was not interruped
         with open("ProcessTimes.txt", "r") as f:
             lines = f.readlines()
         with open("ProcessTimes.txt", "a") as f:
@@ -230,7 +304,8 @@ if run_analysis is True:
                 except:
                     failed_run = True
             if failed_run is False:
-                f.write(':' + chain_names[i])
+                print("Writing process times")
+                f.write(chain_names[i])
                 f.write(':' + files_last_run[i] + "\n")
         f.close()
 
@@ -242,28 +317,7 @@ if run_analysis is True:
             # os.system("root -l")
 
 if run_sum is True:
-    print("\nSumming Histograms...")
-
-    # store the histograms from the first seciton of data in a list
-    totHist = []
-    sec0 = r.TFile("OutputFiles/%s.root" % chain_names[0])
-    key0 = sec0.GetListOfKeys()
-    for j in range(len(key0)):
-        totHist.append(sec0.Get(key0[j].GetName()))
-
-    for i in range(1, len(chain_names)):
-        secFile = r.TFile("OutputFiles/%s.root" % chain_names[i])
-        keys = secFile.GetListOfKeys()
-
-        # loop over histograms in the file and add them cumulatively
-        for j in range(len(keys)):
-            totHist[j].Add(secFile.Get(keys[j].GetName()))
-        totFile = r.TFile("OutputFiles/%s.root" % sum_name, "RECREATE")
-        for hist in totHist:
-            hist.Write()
-        totFile.Close()
-
-    print("Sum %s Complete!" % chains[0])
+    SumHistograms(chain_names, sum_name, single_sim=False)
 
 if run_restart is True:
     print("\nAnalysis aborted...Restarting...\n")
