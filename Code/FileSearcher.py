@@ -11,13 +11,16 @@ print("Getting data from computer: %s..." % host)
 
 if host == "higgs":
     MC_path = "/higgs-data3/sam/forTomRyunAliceLuca/v03/mc"
+    data_path = "/higgs-data3/sam/forTomRyunAliceLuca/v03/data"
     # amount of '.' before chain name
     chain_start = 6
 elif host == "pc2014":
     MC_path = "/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/mc"
+    data_path = "/pc2014-data4/sam/VBF_Ztt/HIGG8D1/v5.0/data"
     chain_start = 7
 elif host == "pc2012":
     MC_path = "/pc2012-data1/sam/VBF_Ztt/HIGG8D1/v5.0/mc"
+    data_path = "/pc2012-data1/sam/VBF_Ztt/HIGG8D1/v5.0/data"
     chain_start = 7
 
 found_dir = None
@@ -261,8 +264,6 @@ if run_sum is True:
         totFile.Close()
 
     print("Sum %s Complete!" % chains[0])
-    r.gROOT.ProcessLine("new TBrowser")
-    os.system("root -l")
 
 if run_restart is True:
     print("\nAnalysis aborted...Restarting...\n")
