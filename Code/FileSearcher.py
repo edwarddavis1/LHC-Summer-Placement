@@ -40,6 +40,8 @@ def SumHistograms(chain_names, sum_name, single_sim):
 
     print("Sum %s Complete!" % sum_name)
 
+# --------------------------- PRE-SEARCH STUFF ------------------------------ #
+
 
 # Gets the name of the host (the computer you are ssh'ing to)
 proc = Popen(['hostname'], stdout=PIPE)
@@ -73,6 +75,45 @@ file_times = []
 files_last_run = []
 second_substring = []
 file_time_total_s = 0
+
+# Formats the Process times correctly
+new_lines = []
+with open("ProcessTimes.txt", "r") as f:
+    lines = f.readlines()
+    for line in lines:
+
+        # skips lines with no time info
+        if line.split(':')[0] == '':
+            continue
+        try:
+            line.split(':')[3]
+        except:
+            continue
+
+        chain_name = line.split(':')[-3]
+        time_info = line.split(':')[0:-3]
+        last_run = ':'.join(line.split(':')[-2:])
+        time_info = [int(i) for i in time_info]
+
+        hist_num = len(time_info) / 2
+
+        min_all = time_info[::2]
+        sec_all = time_info[1::2]
+
+        total_in_sec = sum(min_all) * 60 + sum(sec_all)
+        min_total = int(total_in_sec / 60)
+        sec_total = total_in_sec - min_total * 60
+
+        new_lines.append("%s:%s:%s:%s" % (min_total, sec_total,
+                                          chain_name, last_run))
+f.close()
+
+with open("ProcessTimes.txt", "w") as f:
+    for new_line in new_lines:
+        f.write(new_line)
+f.close()
+
+# ---------------------------- SEARCH FILES ----------------------------------#
 
 while found_dir is None:
     subchains[:] = []
@@ -172,7 +213,7 @@ while found_dir is None:
                                 file_last_run = str(line.split(':')[3]) + \
                                     ':' + str(line.split(':')[4].rstrip())
                                 break
-                        print('{:35s} {:.2f} GB	{:13} {}'.format(
+                        print('{:35s} {:.2f} GB	{:16} {}'.format(
                             chain_name, file_size, file_time,
                             file_last_run))
                         file_paths.append(hists_str)
@@ -185,10 +226,13 @@ while found_dir is None:
             print("I'm sorry, I couldn't find a matching simulation to %s!" %
                   chains[i])
 
-file_time_total_m = int(round(file_time_total_s / 60))
-file_time_total_s = file_time_total_s - file_time_total_m * 60
-print("\nI found %i simulations, total time: %i min %i sec\n" %
-      (len(chain_names), file_time_total_m, file_time_total_s))
+file_time_total_h = int(round(file_time_total_s / 3600))
+file_time_total_m = int(round(file_time_total_s / 60)) - file_time_total_h * 60
+file_time_total_s = (file_time_total_s - file_time_total_m * 60
+                     - file_time_total_h * 3600)
+print("\nI found %i simulations, total time: %i h %i min %i sec\n" %
+      (len(chain_names), file_time_total_h, file_time_total_m,
+       file_time_total_s))
 run_analysis = False
 run_sum = False
 run_stack = False
